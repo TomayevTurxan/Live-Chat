@@ -69,9 +69,7 @@ export const createComponents = () => {
         // root: {
         // borderRadius: "8px",
         // textTransform: "none",
-
         // },
-
         root: ({ theme }) => ({
           borderRadius: "8px",
           textTransform: "none",
@@ -393,7 +391,6 @@ export const createComponents = () => {
 
     MuiTextField: {
       defaultProps: {
-        variant: "filled",
         size: "medium",
         slotProps: {
           formHelperText: {

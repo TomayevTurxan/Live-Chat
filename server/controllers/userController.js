@@ -11,7 +11,6 @@ const createToken = (_id) => {
 
 const registerUser = async (req, res) => {
   try {
-    console.log("req", req.body);
     const { name, email, password } = req.body;
 
     let user = await userModel.findOne({ email });
@@ -37,7 +36,13 @@ const registerUser = async (req, res) => {
     user.save();
 
     const token = createToken(user._id);
-    res.status(200).json({ _id: user._id, name, email, token });
+    res.status(200).json({
+      message: "Registration is successful!",
+      _id: user._id,
+      name,
+      email,
+      token,
+    });
   } catch (error) {
     console.log("Error:", error);
     res.status(500).json(error);
@@ -61,7 +66,13 @@ const loginUser = async (req, res) => {
     }
 
     const token = createToken(user._id);
-    res.status(200).json({ _id: user._id, name: user.name, email, token });
+    res.status(200).json({
+      message: "Login is successful!",
+      _id: user._id,
+      name: user.name,
+      email,
+      token,
+    });
   } catch (error) {
     console.log("Error:", error);
     res.status(500).json(error);
@@ -74,7 +85,7 @@ const findUser = async (req, res) => {
     let user = await userModel.findById(userId);
     res.status(200).json(user);
     if (!user) {
-      res.status(400).json("User doesnot exists!");
+      res.status(400).json("User doesn not exists!");
     }
   } catch (error) {
     console.log("Error:", error);
