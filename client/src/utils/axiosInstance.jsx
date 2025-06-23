@@ -11,7 +11,6 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.response.use(
   (response) => {
     if (response.data?.message) {
-      console.log("response", response);
       toast.success(response.data.message);
     }
     return response;

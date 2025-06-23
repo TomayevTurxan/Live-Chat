@@ -5,6 +5,7 @@ import "./App.css";
 import theme from "./theme";
 import { ToastContainer } from "react-toastify";
 import { UserProvider } from "./context/UserInfo";
+import { ChatProvider } from "./context/ChatContext";
 
 function Providers() {
   return <RouterProvider router={router} />;
@@ -15,7 +16,9 @@ function App() {
       <CssBaseline />
       <ToastContainer position="top-right" autoClose={3000} />
       <UserProvider>
-        <Providers />
+        <ChatProvider>
+          <Providers />
+        </ChatProvider>
       </UserProvider>
     </ThemeProvider>
   );

@@ -1,12 +1,19 @@
-import { Button, Stack, Box, Typography } from "@mui/material";
+import {
+  Button,
+  Stack,
+  Box,
+  Typography,
+  CircularProgress,
+} from "@mui/material";
 import Link from "../../../components/Link";
 import TextFieldForm from "../../../components/TextFieldForm/TextFieldForm";
 import { FormProvider, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../../lib/axiosInstance";
+import { useRegister } from "../../../features/mutations";
 
 const RegisterForm = () => {
   const navigate = useNavigate();
+  const { mutate: register, isPending } = useRegister();
   const methods = useForm({
     defaultValues: {
       name: "",
@@ -15,19 +22,17 @@ const RegisterForm = () => {
     },
   });
 
-  const onSubmit = async (data) => {
-    try {
-      const response = await axiosInstance.post("/users/register", data);
-      console.log("Registration successful:", response.data);
-      navigate("/login");
-    } catch (error) {
-      console.error("Registration failed:", error);
-    }
+  const handleSubmit = (data) => {
+    register(data, {
+      onSuccess: () => {
+        navigate("/login");
+      },
+    });
   };
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)}>
+      <form onSubmit={methods.handleSubmit(handleSubmit)}>
         <Stack spacing={2}>
           <TextFieldForm name="name" formLabel="Name" type="text" fullWidth />
           <TextFieldForm
@@ -43,7 +48,11 @@ const RegisterForm = () => {
             fullWidth
           />
           <Button variant="contained" fullWidth sx={{ mt: 1 }} type="submit">
-            Register
+            {isPending ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Register"
+            )}
           </Button>
           <Box mt={3} textAlign="center">
             <Typography variant="body2">

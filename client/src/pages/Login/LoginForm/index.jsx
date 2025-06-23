@@ -1,12 +1,13 @@
-import { Button, Stack } from "@mui/material";
+import { Button, CircularProgress, Stack } from "@mui/material";
 import TextFieldForm from "../../../components/TextFieldForm/TextFieldForm";
 import { useNavigate } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
-import axiosInstance from "../../../lib/axiosInstance";
 import { useUser } from "../../../context/contexts";
+import { useLogin } from "../../../features/mutations";
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { mutate: login, isPending } = useLogin();
   const methods = useForm({
     defaultValues: {
       email: "",
@@ -15,17 +16,14 @@ const LoginForm = () => {
   });
   const { setUserInfo } = useUser();
 
-  const onSubmit = async (data) => {
-    try {
-      const response = await axiosInstance.post("/users/login", data);
-      console.log("Login successful:", response.data);
-      setUserInfo(response.data);
-      navigate("/chat");
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
+  const onSubmit = (data) => {
+    login(data, {
+      onSuccess: (responseData) => {
+        setUserInfo(responseData);
+        navigate("/chat");
+      },
+    });
   };
-
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)}>
@@ -43,7 +41,11 @@ const LoginForm = () => {
             fullWidth
           />
           <Button variant="contained" fullWidth sx={{ mt: 1 }} type="submit">
-            Log In
+            {isPending ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Login"
+            )}
           </Button>
         </Stack>
       </form>

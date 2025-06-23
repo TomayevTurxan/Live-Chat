@@ -15,18 +15,32 @@ import {
   Button,
   useColorScheme,
 } from "@mui/material";
+import axiosInstance from "../utils/axiosInstance";
 import { LightMode, DarkMode as DarkModeIcon } from "@mui/icons-material";
-import React from "react";
+import React, { useEffect } from "react";
 import { useUser } from "../context/contexts";
+import { useUserChats } from "../features/queries";
 
 const Chat = () => {
   const { mode, setMode } = useColorScheme();
-
   const { userInfo } = useUser();
-  console.log("userr", userInfo);
+  // const {
+  //   userChats,
+  //   isUserChatsLoading,
+  //   userChatsError,
+  //   setuUserChats,
+  //   setIsUserChatsLoading,
+  //   setUserChatsError,
+  // } = useUserChats();
+const { data: userChats, isLoading, error } = useUserChats(userInfo?._id);
+
+
   const handleToggle = () => {
     setMode(mode === "light" ? "dark" : "light");
   };
+  console.log("userInfo:", userInfo);
+
+  console.log("userChats:", userChats);
 
   return (
     <Grid container height="100vh">
