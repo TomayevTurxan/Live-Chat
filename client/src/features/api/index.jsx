@@ -13,3 +13,13 @@ export const getUserChatsApi = async (userId) => {
   const response = await axiosInstance.get(`/chats/${userId}`);
   return response.data;
 };
+
+export const getRecipientUserApi = async (recipientId) => {
+  const response = await axiosInstance.get(`/users/findUser/${recipientId}`);
+  return response.data;
+};
+
+export const allUsersApi = async () => {
+  const response = await axiosInstance.get("/users");
+  return response.data;
+};

@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Box,
   Grid,
@@ -15,11 +16,10 @@ import {
   Button,
   useColorScheme,
 } from "@mui/material";
-import axiosInstance from "../utils/axiosInstance";
 import { LightMode, DarkMode as DarkModeIcon } from "@mui/icons-material";
-import React, { useEffect } from "react";
 import { useUser } from "../context/contexts";
 import { useUserChats } from "../features/queries";
+import UserChat from "../components/Chat/UserChat";
 
 const Chat = () => {
   const { mode, setMode } = useColorScheme();
@@ -32,15 +32,11 @@ const Chat = () => {
   //   setIsUserChatsLoading,
   //   setUserChatsError,
   // } = useUserChats();
-const { data: userChats, isLoading, error } = useUserChats(userInfo?._id);
-
+  const { data: userChats, isLoading, error } = useUserChats(userInfo?._id);
 
   const handleToggle = () => {
     setMode(mode === "light" ? "dark" : "light");
   };
-  console.log("userInfo:", userInfo);
-
-  console.log("userChats:", userChats);
 
   return (
     <Grid container height="100vh">
@@ -65,20 +61,13 @@ const { data: userChats, isLoading, error } = useUserChats(userInfo?._id);
         </Box>
 
         <List>
-          {["Ilkin"].map((name, i) => (
-            <React.Fragment key={i}>
-              <ListItem button alignItems="flex-start">
-                <ListItemAvatar>
-                  <Avatar />
-                </ListItemAvatar>
-                <ListItemText
-                  primary={name}
-                  secondary={i === 0 ? "typing..." : "Have a nice day!"}
-                />
-              </ListItem>
-              <Divider variant="inset" component="li" />
-            </React.Fragment>
-          ))}
+          <Box p={3} flexGrow={1}>
+            {userChats?.map((chat, index) => (
+              <Box key={chat._id || index} alignSelf="flex-start">
+                <UserChat chat={chat} user={userInfo} userChats={userChats} />
+              </Box>
+            ))}
+          </Box>
         </List>
       </Grid>
 
@@ -100,26 +89,6 @@ const { data: userChats, isLoading, error } = useUserChats(userInfo?._id);
           <IconButton onClick={handleToggle} color="inherit">
             {mode === "dark" ? <DarkModeIcon /> : <LightMode />}
           </IconButton>
-        </Box>
-
-        <Box p={3} flexGrow={1} overflow="auto">
-          <Stack spacing={2}>
-            <Box alignSelf="flex-end" maxWidth="70%">
-              <Paper sx={{ p: 2, bgcolor: "#1976d2", color: "white" }}>
-                Hello! I’m Turkhan. How can I help you?
-              </Paper>
-            </Box>
-
-            <Box alignSelf="flex-start" maxWidth="70%">
-              <Paper sx={{ p: 2 }}>Test</Paper>
-            </Box>
-
-            <Box alignSelf="flex-end" maxWidth="70%">
-              <Paper sx={{ p: 2, bgcolor: "#1976d2", color: "white" }}>
-                Test
-              </Paper>
-            </Box>
-          </Stack>
         </Box>
 
         <Box p={2} borderTop="1px solid #eee">
