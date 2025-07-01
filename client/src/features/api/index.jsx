@@ -23,3 +23,13 @@ export const allUsersApi = async () => {
   const response = await axiosInstance.get("/users");
   return response.data;
 };
+
+export const createChatApi = async (data) => {
+  const response = await axiosInstance.post("/chats", data);
+  return response.data;
+};
+
+export const getMessagesApi = async (messageId) => {
+  const response = await axiosInstance.get(`messages/${messageId}`);
+  return response.data;
+};

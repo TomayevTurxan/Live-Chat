@@ -1,5 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { allUsersApi, getRecipientUserApi, getUserChatsApi } from "../api";
+import {
+  allUsersApi,
+  getMessagesApi,
+  getRecipientUserApi,
+  getUserChatsApi,
+} from "../api";
 
 export const keys = {
   base: ["chats"],
@@ -7,7 +12,7 @@ export const keys = {
     return [...this.base, "userChats"];
   },
   getUserChats(userId) {
-    return [...this.base, userId];
+    return [...this.userChats, userId];
   },
   get recipientUser() {
     return [...this.base, "recipientUser"];
@@ -20,6 +25,12 @@ export const keys = {
   },
   getAllUsers() {
     return [...this.allUsers];
+  },
+  get messages() {
+    return [...this.base, "messages"];
+  },
+  getMessages(messageId) {
+    return [...this.messages, messageId];
   },
 };
 
@@ -41,5 +52,12 @@ export function useAllUsers() {
   return useQuery({
     queryKey: keys.getAllUsers(),
     queryFn: () => allUsersApi(),
+  });
+}
+
+export function useGetMessages(messageId) {
+  return useQuery({
+    queryKey: keys.getMessages(messageId),
+    queryFn: () => getMessagesApi(messageId),
   });
 }

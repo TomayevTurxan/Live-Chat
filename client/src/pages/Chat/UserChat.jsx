@@ -1,19 +1,23 @@
 import { Avatar, Box, Grid, Typography, Stack, Chip } from "@mui/material";
 import CircleIcon from "@mui/icons-material/Circle";
+import { useContext, useEffect } from "react";
+import PotentialChatContext from "../../context/PotentialChatContext";
 import { useAllUsers, useRecipientUser } from "../../features/queries";
-import { useEffect, useState } from "react";
 
 const UserChat = ({ chat, user, userChats }) => {
   const recipientId = chat?.members.find((id) => id !== user._id);
-  const [potentialChats, setPotentialChats] = useState();
+  const { setPotentialChats, setPotentialLoading } =
+    useContext(PotentialChatContext);
   const { data: recipientUser } = useRecipientUser(recipientId);
   const { data: allUsers } = useAllUsers();
   const lastMessage = "Text Message";
   const lastMessageDate = "12/12/2022";
   const unreadCount = 2;
-  
+
   useEffect(() => {
     if (!userChats || !allUsers) return;
+
+    setPotentialLoading(true);
 
     const filtered = allUsers.filter((u) => {
       if (u._id === user._id) return false;
@@ -26,9 +30,9 @@ const UserChat = ({ chat, user, userChats }) => {
     });
 
     setPotentialChats(filtered);
+
+    setPotentialLoading(false);
   }, [userChats, allUsers, user]);
-
-
 
   if (!recipientUser) return null;
   return (

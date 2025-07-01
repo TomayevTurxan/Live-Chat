@@ -6,21 +6,30 @@ import theme from "./theme";
 import { ToastContainer } from "react-toastify";
 import { UserProvider } from "./context/UserInfo";
 import { ChatProvider } from "./context/ChatContext";
+import { PotentialChatProvider } from "./context/PotentialChatContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 function Providers() {
   return <RouterProvider router={router} />;
 }
+
 function App() {
   return (
-    <ThemeProvider theme={theme} defaultMode="system">
-      <CssBaseline />
-      <ToastContainer position="top-right" autoClose={3000} />
-      <UserProvider>
-        <ChatProvider>
-          <Providers />
-        </ChatProvider>
-      </UserProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={theme} defaultMode="system">
+        <CssBaseline />
+        <ToastContainer position="top-right" autoClose={3000} />
+        <UserProvider>
+          <ChatProvider>
+            <PotentialChatProvider>
+              <Providers />
+            </PotentialChatProvider>
+          </ChatProvider>
+        </UserProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

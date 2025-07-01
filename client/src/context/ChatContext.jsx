@@ -3,10 +3,10 @@ import { createContext, useState } from "react";
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
-  const [userChats, setuUserChats] = useState(null);
-  const [isUserChatsLoading, setIsUserChatsLoading] = useState(true);
+  const [userChats, setUserChats] = useState([]);
+  const [isUserChatsLoading, setIsUserChatsLoading] = useState(false);
   const [userChatsError, setUserChatsError] = useState(null);
-
+  const [currentChat, setCurrentChat] = useState(null);
 
   return (
     <ChatContext.Provider
@@ -14,9 +14,11 @@ export const ChatProvider = ({ children }) => {
         userChats,
         isUserChatsLoading,
         userChatsError,
-        setuUserChats,
+        setUserChats,
         setIsUserChatsLoading,
         setUserChatsError,
+        currentChat,
+        setCurrentChat,
       }}
     >
       {children}

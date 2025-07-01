@@ -20,6 +20,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.58.1",
+    "react-input-emoji": "^5.9.0",
     "react-router-dom": "^7.6.2",
     "react-toastify": "^11.0.5",
     "styled-components": "^6.1.18"

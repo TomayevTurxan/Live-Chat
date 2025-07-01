@@ -1,108 +1,117 @@
-import React from "react";
+import { useState } from "react";
 import {
   Box,
   Grid,
-  Avatar,
-  Typography,
-  IconButton,
-  TextField,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Divider,
-  Paper,
-  Stack,
-  Button,
-  useColorScheme,
+  useMediaQuery,
+  useTheme,
+  Drawer,
 } from "@mui/material";
-import { LightMode, DarkMode as DarkModeIcon } from "@mui/icons-material";
-import { useUser } from "../context/contexts";
-import { useUserChats } from "../features/queries";
-import UserChat from "../components/Chat/UserChat";
+import ChatSidebar from "./ChatSiderBar";
+import ChatConversation from "./ChatConversation";
 
 const Chat = () => {
-  const { mode, setMode } = useColorScheme();
-  const { userInfo } = useUser();
-  // const {
-  //   userChats,
-  //   isUserChatsLoading,
-  //   userChatsError,
-  //   setuUserChats,
-  //   setIsUserChatsLoading,
-  //   setUserChatsError,
-  // } = useUserChats();
-  const { data: userChats, isLoading, error } = useUserChats(userInfo?._id);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  // State management
+  const [currentChat, setCurrentChat] = useState([]);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [showChatView, setShowChatView] = useState(false);
 
-  const handleToggle = () => {
-    setMode(mode === "light" ? "dark" : "light");
+  // Handlers
+  const handleChatSelect = (chat) => {
+    console.log("Selected chat:", chat);
+    setCurrentChat(chat);
+    setSelectedChat(chat);
+    
+    // On mobile, show chat view and close drawer
+    if (isMobile) {
+      setShowChatView(true);
+      setMobileDrawerOpen(false);
+    }
   };
 
-  return (
-    <Grid container height="100vh">
-      <Grid size={3} borderRight="1px solid #eee">
-        <Box p={2}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Typography variant="h6">Live Chat</Typography>
-            Welcome, {userInfo?.name}!
-          </Box>
-          <Grid size={12}>
-            <TextField
-              fullWidth
-              placeholder="Search"
-              size="small"
-              sx={{ mt: 2 }}
-            />
-          </Grid>
-        </Box>
+  const handleBackToChats = () => {
+    if (isMobile) {
+      setShowChatView(false);
+      setCurrentChat([]);
+      setSelectedChat(null);
+    }
+  };
 
-        <List>
-          <Box p={3} flexGrow={1}>
-            {userChats?.map((chat, index) => (
-              <Box key={chat._id || index} alignSelf="flex-start">
-                <UserChat chat={chat} user={userInfo} userChats={userChats} />
-              </Box>
-            ))}
-          </Box>
-        </List>
-      </Grid>
+  const handleDrawerToggle = () => {
+    setMobileDrawerOpen(!mobileDrawerOpen);
+  };
 
-      <Grid size={9} display="flex" flexDirection="column">
+  // Desktop/Tablet Layout
+  if (!isMobile) {
+    return (
+      <Box sx={{ height: '100vh', display: 'flex' }}>
+        {/* Sidebar */}
         <Box
-          p={2}
-          borderBottom="1px solid #eee"
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
+          sx={{
+            width: { md: '320px', lg: '360px' },
+            borderRight: '1px solid',
+            borderColor: 'divider',
+            flexShrink: 0,
+          }}
         >
-          <Box display="flex" alignItems="center">
-            <Avatar sx={{ mr: 2 }} />
-            <Box>
-              <Typography variant="subtitle1">Turkhan</Typography>
-              <Typography variant="caption"> Online</Typography>
-            </Box>
-          </Box>
-          <IconButton onClick={handleToggle} color="inherit">
-            {mode === "dark" ? <DarkModeIcon /> : <LightMode />}
-          </IconButton>
+          <ChatSidebar 
+            onChatSelect={handleChatSelect}
+            selectedChat={selectedChat}
+          />
         </Box>
 
-        <Box p={2} borderTop="1px solid #eee">
-          <Grid container spacing={1}>
-            <Grid size={11}>
-              <TextField placeholder="Type your message…" fullWidth />
-            </Grid>
-            <Grid size={1}>
-              <Button variant="contained">Send</Button>
-            </Grid>
-          </Grid>
+        {/* Main Chat Area */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <ChatConversation 
+            currentChat={currentChat}
+            onBackToChats={handleBackToChats}
+            onMenuToggle={handleDrawerToggle}
+          />
         </Box>
-      </Grid>
-    </Grid>
+      </Box>
+    );
+  }
+
+  // Mobile Layout
+  return (
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {!showChatView ? (
+        /* Mobile: Show Chat List */
+        <ChatSidebar 
+          onChatSelect={handleChatSelect}
+          selectedChat={selectedChat}
+        />
+      ) : (
+        /* Mobile: Show Chat Conversation */
+        <ChatConversation 
+          currentChat={currentChat}
+          onBackToChats={handleBackToChats}
+          onMenuToggle={handleDrawerToggle}
+        />
+      )}
+
+      {/* Mobile Drawer for additional navigation */}
+      <Drawer
+        variant="temporary"
+        anchor="left"
+        open={mobileDrawerOpen}
+        onClose={handleDrawerToggle}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            width: '280px',
+          },
+        }}
+      >
+        <ChatSidebar 
+          onChatSelect={handleChatSelect}
+          selectedChat={selectedChat}
+        />
+      </Drawer>
+    </Box>
   );
 };
 
