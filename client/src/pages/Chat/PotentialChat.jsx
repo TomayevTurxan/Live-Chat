@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useEffect, useState, useContext } from "react";
 import {
   Avatar,
   Box,
@@ -11,19 +11,39 @@ import {
   CircularProgress,
 } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
-import PotentialChatContext from "../../context/PotentialChatContext";
 import { useCreateChat } from "../../features/mutations";
 import { useUser } from "../../context/contexts";
 import { useQueryClient } from "@tanstack/react-query";
+import UserContext from "../../context/UserInfo";
+import { useAllUsers, useUserChats } from "../../features/queries";
 
 const PotentialChats = () => {
   const queryClient = useQueryClient();
-  const { potentialChats, setPotentialChats } =
-    useContext(PotentialChatContext);
   const { userInfo } = useUser();
+  const { onlineUsers } = useContext(UserContext);
+
+  const { data: allUsers } = useAllUsers();
+  const { data: userChats } = useUserChats(userInfo?._id);
   const createChatMutation = useCreateChat();
 
+  const [potentialChats, setPotentialChats] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
+
+  useEffect(() => {
+    if (!userInfo?._id || !Array.isArray(allUsers) || !Array.isArray(userChats))
+      return;
+
+    const existingChatUserIds = userChats.flatMap((chat) =>
+      chat.members.filter((id) => id !== userInfo._id)
+    );
+
+    const filtered = allUsers.filter(
+      (user) =>
+        user._id !== userInfo._id && !existingChatUserIds.includes(user._id)
+    );
+
+    setPotentialChats(filtered);
+  }, [allUsers, userChats, userInfo]);
 
   const handleCreateChat = (otherUserId) => {
     if (!userInfo?._id || !otherUserId) return;
@@ -36,7 +56,7 @@ const PotentialChats = () => {
       },
       {
         onSuccess: (newChat) => {
-          queryClient.invalidateQueries(["potentialChats"]);
+          queryClient.invalidateQueries(["userChats"]);
           setPotentialChats((prev) =>
             prev.filter((u) => !newChat.members.includes(u._id))
           );
@@ -65,6 +85,7 @@ const PotentialChats = () => {
         {potentialChats.map((userItem, index) => (
           <ListItem
             key={userItem._id || index}
+            onClick={() => handleCreateChat(userItem._id)}
             sx={{
               cursor: "pointer",
               "&:hover": { bgcolor: "action.hover" },
@@ -73,7 +94,14 @@ const PotentialChats = () => {
             }}
           >
             <ListItemAvatar>
-              <Avatar>
+              <Avatar
+                sx={{
+                  border: onlineUsers?.some((user) => user._id === userItem._id)
+                    ? "2px solid green"
+                    : "2px solid transparent",
+                  transition: "border 0.3s ease",
+                }}
+              >
                 {userItem.name ? (
                   userItem.name.charAt(0).toUpperCase()
                 ) : (
@@ -81,7 +109,6 @@ const PotentialChats = () => {
                 )}
               </Avatar>
             </ListItemAvatar>
-
             <ListItemText
               primary={
                 <Box
@@ -91,20 +118,38 @@ const PotentialChats = () => {
                     alignItems: "center",
                   }}
                 >
-                  <Typography variant="subtitle1" fontWeight="medium">
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="medium"
+                    component="span"
+                  >
                     {userItem.name || "Unknown User"}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    component="span"
+                  >
                     {new Date(userItem.createdAt).toLocaleDateString()}
                   </Typography>
                 </Box>
               }
               secondary={
-                <Box sx={{ mt: 0.5 }}>
-                  <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ mt: 0.5, display: "block" }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    component="span"
+                    sx={{ display: "block" }}
+                  >
                     {userItem.email || "No email provided"}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    component="span"
+                    sx={{ display: "block" }}
+                  >
                     Joined{" "}
                     {new Date(userItem.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
@@ -115,11 +160,7 @@ const PotentialChats = () => {
                 </Box>
               }
             />
-
-            <Box
-              sx={{ display: "flex", alignItems: "center" }}
-              onClick={() => handleCreateChat(userItem._id)}
-            >
+            <Box sx={{ display: "flex", alignItems: "center" }}>
               {loadingId === userItem._id ? (
                 <CircularProgress size={24} />
               ) : (
@@ -128,7 +169,6 @@ const PotentialChats = () => {
                     color: "primary.main",
                     fontSize: 20,
                     opacity: 0.7,
-                    cursor: "pointer",
                   }}
                 />
               )}

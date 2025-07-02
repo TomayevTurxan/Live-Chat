@@ -1,5 +1,6 @@
 import React, { createContext, useState } from "react";
 import { useEffect } from "react";
+import { io } from "socket.io-client";
 
 const UserContext = createContext({
   userInfo: null,
@@ -11,6 +12,8 @@ export const UserProvider = ({ children }) => {
     const storedUser = localStorage.getItem("userInfo");
     return storedUser ? JSON.parse(storedUser) : null;
   });
+  const [socket, setSocket] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState(null);
 
   useEffect(() => {
     if (userInfo) {
@@ -19,9 +22,34 @@ export const UserProvider = ({ children }) => {
       localStorage.removeItem("userInfo");
     }
   }, [userInfo]);
-  
+
+  //configuration socket
+  useEffect(() => {
+    const newSocket = io("http://localhost:3000");
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [userInfo]);
+
+  //add online users
+  useEffect(() => {
+    if (socket === null) return;
+    socket.emit("addNewUser", userInfo?._id);
+    socket.on("getOnlineUsers", (res) => {
+      setOnlineUsers(res);
+    });
+    return () => {
+      socket.off("getOnlineUsers");
+    };
+  }, [socket]);
+
+  console.log("onlineUsers", onlineUsers);
   return (
-    <UserContext.Provider value={{ userInfo, setUserInfo }}>
+    <UserContext.Provider
+      value={{ userInfo, setUserInfo, onlineUsers, setOnlineUsers, socket }}
+    >
       {children}
     </UserContext.Provider>
   );

@@ -15,6 +15,7 @@ export const getUserChatsApi = async (userId) => {
 };
 
 export const getRecipientUserApi = async (recipientId) => {
+  console.log('recipientIdrecipientId4',recipientId)
   const response = await axiosInstance.get(`/users/findUser/${recipientId}`);
   return response.data;
 };
@@ -31,5 +32,10 @@ export const createChatApi = async (data) => {
 
 export const getMessagesApi = async (messageId) => {
   const response = await axiosInstance.get(`messages/${messageId}`);
+  return response.data;
+};
+
+export const postMessage = async (data) => {
+  const response = await axiosInstance.post(`messages`, data);
   return response.data;
 };

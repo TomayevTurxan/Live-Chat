@@ -45,6 +45,7 @@ export function useRecipientUser(recipientId) {
   return useQuery({
     queryKey: keys.getRecepientUser(recipientId),
     queryFn: () => getRecipientUserApi(recipientId),
+    enabled: !!recipientId,
   });
 }
 

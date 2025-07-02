@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -23,6 +23,7 @@
     "react-input-emoji": "^5.9.0",
     "react-router-dom": "^7.6.2",
     "react-toastify": "^11.0.5",
+    "socket.io-client": "^4.8.1",
     "styled-components": "^6.1.18"
   },
   "devDependencies": {

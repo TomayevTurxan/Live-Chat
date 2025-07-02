@@ -1,12 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useContext } from "react";
 import {
   Box,
   Avatar,
   Typography,
   IconButton,
-  TextField,
   Button,
-  useColorScheme,
   useMediaQuery,
   useTheme,
   Chip,
@@ -17,80 +15,68 @@ import {
   Menu,
   ArrowBack,
   Send,
-  AttachFile,
-  EmojiEmotions,
   MoreVert,
 } from "@mui/icons-material";
 import ChatMessages from "./Chat/ChatMessages";
-import InputEmoji from "react-input-emoji";
+import { usePostMessage } from "../features/mutations";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUser } from "../context/contexts";
+import { useRecipientUser } from "../features/queries";
+import UserContext from "../context/UserInfo";
+import WelcomeBox from "../components/WelcomeBox";
+import DarkMode from "../components/DarkMode";
+import InputEmojiComponent from "../components/InputEmokji";
+import ChipOnline from "../components/Chip";
 
-const ChatConversation = ({
-  currentChat,
-  onBackToChats,
-  onMenuToggle,
-  recipientInfo = { name: "Turkhan", status: "Online", avatar: null },
-}) => {
+const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
+  const queryClient = useQueryClient();
   const theme = useTheme();
-  const { mode, setMode } = useColorScheme();
   const [message, setMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const messageInputRef = useRef(null);
+  const sendMessage = usePostMessage();
+  const { userInfo } = useUser();
+  const { socket } = useContext(UserContext);
+
+  const recipientId = currentChat?.members?.find((id) => id !== userInfo._id);
+  const { data: recipientUser } = useRecipientUser(recipientId);
 
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  const handleToggleTheme = () => {
-    setMode(mode === "light" ? "dark" : "light");
-  };
-
   const handleSendMessage = () => {
-    if (message.trim()) {
-      console.log("Sending message:", message);
-      setMessage("");
-      messageInputRef.current?.focus();
-    }
+    if (!message.trim()) return;
+
+    const messageData = {
+      chatId: currentChat._id,
+      senderId: userInfo._id,
+      text: message.trim(),
+    };
+
+    sendMessage.mutate(messageData, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["messages"]);
+        setMessage("");
+        messageInputRef.current?.focus();
+
+        socket.emit("sendMessage", {
+          ...messageData,
+          recipientId,
+        });
+      },
+    });
   };
 
-  const handleKeyPress = (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       handleSendMessage();
     }
   };
 
-  const handleMessageChange = (event) => {
-    setMessage(event.target.value);
-    setIsTyping(true);
-    setTimeout(() => setIsTyping(false), 1000);
-  };
-
-  useEffect(() => {
-    if (currentChat && messageInputRef.current) {
-      messageInputRef.current.focus();
-    }
-  }, [currentChat]);
-
-  if (!currentChat || currentChat.length === 0) {
-    return (
-      <Box
-        sx={{
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "background.default",
-          color: "text.secondary",
-        }}
-      >
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Welcome to Live Chat
-        </Typography>
-        <Typography variant="body2" align="center">
-          Select a conversation to start messaging
-        </Typography>
-      </Box>
-    );
+  if (!currentChat || currentChat.length == 0) {
+    return <WelcomeBox />;
   }
+
+  if (!recipientUser) return null;
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -115,16 +101,12 @@ const ChatConversation = ({
           )}
 
           <Avatar
-            src={recipientInfo.avatar}
+            src={recipientUser.avatar}
             sx={{
               mr: { xs: 1, md: 2 },
-              width: { xs: 36, md: 44 },
-              height: { xs: 36, md: 44 },
-              border: "2px solid",
-              borderColor: "primary.main",
             }}
           >
-            {recipientInfo.name?.charAt(0)}
+            {recipientUser.name?.charAt(0)}
           </Avatar>
 
           <Box>
@@ -135,32 +117,10 @@ const ChatConversation = ({
                 fontWeight: 600,
               }}
             >
-              {recipientInfo.name}
+              {recipientUser.name}
             </Typography>
             <Box display="flex" alignItems="center" gap={1}>
-              <Chip
-                label={recipientInfo.status}
-                size="small"
-                color={
-                  recipientInfo.status === "Online" ? "success" : "default"
-                }
-                sx={{
-                  height: 20,
-                  fontSize: "0.7rem",
-                  "& .MuiChip-label": {
-                    px: 1,
-                  },
-                }}
-              />
-              {isTyping && (
-                <Typography
-                  variant="caption"
-                  color="primary"
-                  sx={{ fontSize: "0.75rem" }}
-                >
-                  typing...
-                </Typography>
-              )}
+              <ChipOnline recipientUser={recipientUser} />
             </Box>
           </Box>
         </Box>
@@ -171,28 +131,14 @@ const ChatConversation = ({
               <Menu />
             </IconButton>
           )}
-          <IconButton onClick={handleToggleTheme} color="inherit">
-            {mode === "dark" ? <DarkModeIcon /> : <LightMode />}
-          </IconButton>
+          <DarkMode />
           <IconButton color="inherit">
             <MoreVert />
           </IconButton>
         </Box>
       </Box>
 
-      <Box
-        sx={{
-          flex: 1,
-          overflow: "auto",
-          backgroundColor: "background.default",
-          backgroundImage: `linear-gradient(45deg, ${theme.palette.background.default} 25%, transparent 25%), 
-                           linear-gradient(-45deg, ${theme.palette.background.default} 25%, transparent 25%)`,
-          backgroundSize: "20px 20px",
-          p: { xs: 1, md: 2 },
-        }}
-      >
-        <ChatMessages currentChat={currentChat} />
-      </Box>
+      <ChatMessages currentChat={currentChat} recipientId={recipientId} />
 
       <Box
         sx={{
@@ -200,43 +146,39 @@ const ChatConversation = ({
           borderTop: "1px solid",
           borderColor: "divider",
           backgroundColor: "background.paper",
+          display: "flex",
         }}
       >
-        <Box
-          display="flex"
-          alignItems="center"
-          gap={1}
+        <InputEmojiComponent
+          message={message}
+          setMessage={setMessage}
+          handleSendMessage={handleSendMessage}
+          handleKeyPress={handleKeyPress}
+          messageInputRef={messageInputRef}
+        />
+
+        <Button
+          variant="contained"
+          type="button"
+          onClick={handleSendMessage}
+          disabled={
+            !message.trim() ||
+            !currentChat?._id ||
+            !userInfo?._id ||
+            sendMessage.isPending
+          }
+          startIcon={<Send />}
           sx={{
-            flexDirection: { xs: "column", sm: "row" },
+            order: 3,
+            minWidth: { xs: "100%", sm: "auto" },
+            height: { xs: "40px", md: "48px" },
+            fontSize: { xs: "0.875rem", md: "1rem" },
+            borderRadius: 3,
+            px: { xs: 2, md: 3 },
           }}
         >
-          <InputEmoji
-            value={message}
-            onChange={setMessage}
-            onEnter={handleSendMessage}
-            fontFamily="nunito"
-            borderColor="rgba(72, 112, 223, 0.2)"
-            cleanOnEnter
-            placeholder="Type your message..."
-          />
-
-          <Button
-            variant="contained"
-            onClick={handleSendMessage}
-            disabled={!message.trim()}
-            startIcon={<Send />}
-            sx={{
-              order: 3,
-              minWidth: { xs: "100%", sm: "auto" },
-              height: { xs: "40px", md: "48px" },
-              fontSize: { xs: "0.875rem", md: "1rem" },
-              borderRadius: 3,
-              px: { xs: 2, md: 3 },
-            }}
-          >
-            Send
-          </Button>
-        </Box>
+          {sendMessage.isPending ? "Sending..." : "Send"}
+        </Button>
       </Box>
     </Box>
   );

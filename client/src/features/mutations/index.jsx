@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { registerUser, loginUser, createChatApi } from "../api";
+import { registerUser, loginUser, createChatApi, postMessage } from "../api";
 
 export const useRegister = () => {
   return useMutation({
@@ -17,6 +17,14 @@ export const useCreateChat = () => {
   return useMutation({
     mutationFn: (data) => {
       return createChatApi(data);
+    },
+  });
+};
+
+export const usePostMessage = () => {
+  return useMutation({
+    mutationFn: (data) => {
+      return postMessage(data);
     },
   });
 };

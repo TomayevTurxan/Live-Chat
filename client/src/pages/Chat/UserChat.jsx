@@ -1,38 +1,24 @@
-import { Avatar, Box, Grid, Typography, Stack, Chip } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  Grid,
+  Typography,
+  Stack,
+  Chip,
+  ListItemAvatar,
+} from "@mui/material";
 import CircleIcon from "@mui/icons-material/Circle";
-import { useContext, useEffect } from "react";
-import PotentialChatContext from "../../context/PotentialChatContext";
-import { useAllUsers, useRecipientUser } from "../../features/queries";
+import { useContext } from "react";
+import { useRecipientUser } from "../../features/queries";
+import UserContext from "../../context/UserInfo";
 
-const UserChat = ({ chat, user, userChats }) => {
-  const recipientId = chat?.members.find((id) => id !== user._id);
-  const { setPotentialChats, setPotentialLoading } =
-    useContext(PotentialChatContext);
+const UserChat = ({ chat, user }) => {
+  const recipientId = chat?.members?.find((id) => id && id !== user?._id);
   const { data: recipientUser } = useRecipientUser(recipientId);
-  const { data: allUsers } = useAllUsers();
+  const { onlineUsers } = useContext(UserContext);
   const lastMessage = "Text Message";
   const lastMessageDate = "12/12/2022";
   const unreadCount = 2;
-
-  useEffect(() => {
-    if (!userChats || !allUsers) return;
-
-    setPotentialLoading(true);
-
-    const filtered = allUsers.filter((u) => {
-      if (u._id === user._id) return false;
-
-      const isAlreadyInChat = userChats.some((chat) =>
-        chat?.members?.includes(u._id)
-      );
-
-      return !isAlreadyInChat;
-    });
-
-    setPotentialChats(filtered);
-
-    setPotentialLoading(false);
-  }, [userChats, allUsers, user]);
 
   if (!recipientUser) return null;
   return (
@@ -43,7 +29,6 @@ const UserChat = ({ chat, user, userChats }) => {
       py={1}
       sx={{
         cursor: "pointer",
-        borderBottom: "1px solid #eee",
         "&:hover": { bgcolor: "action.hover" },
       }}
     >
@@ -69,13 +54,12 @@ const UserChat = ({ chat, user, userChats }) => {
             </Typography>
 
             <Stack direction="row" spacing={1} alignItems="center">
-              <CircleIcon sx={{ color: "green", fontSize: 12 }} />
-              <Chip
-                label={unreadCount}
-                size="small"
-                color="primary"
-                sx={{ height: 20, fontSize: "0.75rem" }}
-              />
+              {onlineUsers?.some(
+                (onlineUser) => onlineUser.userId === recipientUser._id
+              ) ? (
+                <CircleIcon sx={{ color: "green", fontSize: 12 }} />
+              ) : null}
+              <Chip label={unreadCount} size="small" color="primary" />
             </Stack>
           </Box>
         </Box>

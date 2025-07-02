@@ -18,13 +18,11 @@ import PotentialChats from "./Chat/PotentialChat";
 import UserChat from "./Chat/UserChat";
 
 const ChatSidebar = ({ onChatSelect, selectedChat }) => {
-  const theme = useTheme();
   const { userInfo } = useUser();
+  console.log('userInfo',userInfo)
   const { data: userChats } = useUserChats(userInfo?._id);
   const [showPotentialChats, setShowPotentialChats] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handlePotentialChatsToggle = () => {
     setShowPotentialChats(!showPotentialChats);
@@ -39,10 +37,11 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
   };
 
   const filteredChats =
-    userChats?.filter((chat) => {
+    userChats?.filter(() => {
       return true;
     }) || [];
-
+  console.log("filteredChats", filteredChats);
+  console.log("userChats", userChats);
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Box p={2}>
@@ -89,8 +88,8 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
       </Box>
 
       <List sx={{ flex: 1, overflow: "auto", px: 1 }}>
-        {filteredChats.length > 0 ? (
-          filteredChats.map((chat, index) => (
+        {filteredChats?.length > 0 ? (
+          filteredChats?.map((chat, index) => (
             <Box
               key={chat._id || index}
               onClick={() => handleChatSelect(chat)}
