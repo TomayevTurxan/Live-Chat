@@ -1,14 +1,16 @@
-import { Grid, LinearProgress, Box, Typography, Avatar } from "@mui/material";
+import { LinearProgress, Box, Typography, Avatar } from "@mui/material";
 import { useUser } from "../../context/contexts";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useGetMessages } from "../../features/queries";
 import UserContext from "../../context/UserInfo";
 
 const ChatMessages = ({ currentChat, recipientId }) => {
   const { userInfo } = useUser();
   const [messages, setMessages] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const { data: fetchedMessages, isLoading } = useGetMessages(currentChat?._id);
   const { socket } = useContext(UserContext);
+  const scroll = useRef();
 
   useEffect(() => {
     if (fetchedMessages) {
@@ -24,16 +26,25 @@ const ChatMessages = ({ currentChat, recipientId }) => {
       setMessages((prev) => [...prev, res]);
     });
 
+    socket.on("getNotification", (res) => {
+      const isChatOpen = currentChat?.members.some((id) => id === res.senderId);
+      if (isChatOpen) {
+        setNotifications((prev) => [{ ...res, isRead: true }, ...prev]);
+      } else {
+        setNotifications((prev) => [res, ...prev]);
+      }
+    });
     return () => {
       socket.off("getMessage");
+      socket.off("getNotification");
     };
   }, [socket, currentChat]);
 
-  //send message
+
+  //scroll
   useEffect(() => {
-    if (socket === null) return;
-    socket.emit("sendMessage", { ...messages, recipientId });
-  }, [socket, currentChat]);
+    scroll.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const isMyMessage = (message) => {
     return message.senderId === userInfo?._id;
@@ -45,6 +56,8 @@ const ChatMessages = ({ currentChat, recipientId }) => {
       minute: "2-digit",
     });
   };
+
+  console.log("notii", notifications);
   if (isLoading) return <LinearProgress />;
 
   return (
@@ -58,12 +71,14 @@ const ChatMessages = ({ currentChat, recipientId }) => {
         p: 1,
       }}
     >
-      {messages?.map((msg) => {
+      {messages?.map((msg, index) => {
         const isMine = isMyMessage(msg);
+        // const isLastMessage = index === messages.length - 1;
 
         return (
           <Box
             key={msg._id}
+            ref={scroll}
             sx={{
               display: "flex",
               justifyContent: isMine ? "flex-end" : "flex-start",

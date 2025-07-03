@@ -15,7 +15,6 @@ export const getUserChatsApi = async (userId) => {
 };
 
 export const getRecipientUserApi = async (recipientId) => {
-  console.log('recipientIdrecipientId4',recipientId)
   const response = await axiosInstance.get(`/users/findUser/${recipientId}`);
   return response.data;
 };

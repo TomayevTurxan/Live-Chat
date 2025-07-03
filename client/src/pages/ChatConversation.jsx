@@ -7,7 +7,6 @@ import {
   Button,
   useMediaQuery,
   useTheme,
-  Chip,
 } from "@mui/material";
 import {
   LightMode,
@@ -36,21 +35,18 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const sendMessage = usePostMessage();
   const { userInfo } = useUser();
   const { socket } = useContext(UserContext);
-
   const recipientId = currentChat?.members?.find((id) => id !== userInfo._id);
   const { data: recipientUser } = useRecipientUser(recipientId);
-
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleSendMessage = () => {
     if (!message.trim()) return;
-
     const messageData = {
       chatId: currentChat._id,
       senderId: userInfo._id,
       text: message.trim(),
     };
-
+    console.log('objmessageDataect',messageData)
     sendMessage.mutate(messageData, {
       onSuccess: () => {
         queryClient.invalidateQueries(["messages"]);
@@ -63,13 +59,6 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
         });
       },
     });
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
   };
 
   if (!currentChat || currentChat.length == 0) {
@@ -153,7 +142,6 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
           message={message}
           setMessage={setMessage}
           handleSendMessage={handleSendMessage}
-          handleKeyPress={handleKeyPress}
           messageInputRef={messageInputRef}
         />
 
