@@ -12,22 +12,18 @@ import {
 } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
 import { useCreateChat } from "../../features/mutations";
-import { useUser } from "../../context/contexts";
+import { useChatData, useUser } from "../../context/contexts";
 import { useQueryClient } from "@tanstack/react-query";
 import UserContext from "../../context/UserInfo";
-import { useAllUsers, useUserChats } from "../../features/queries";
 
 const PotentialChats = () => {
   const queryClient = useQueryClient();
-  const { userInfo } = useUser();
   const { onlineUsers } = useContext(UserContext);
-
-  const { data: allUsers } = useAllUsers();
-  const { data: userChats } = useUserChats(userInfo?._id);
-  const createChatMutation = useCreateChat();
-
+  const { userInfo } = useUser();
+  const { allUsers, userChats } = useChatData();
   const [potentialChats, setPotentialChats] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
+  const createChatMutation = useCreateChat();
 
   useEffect(() => {
     if (!userInfo?._id || !Array.isArray(allUsers) || !Array.isArray(userChats))

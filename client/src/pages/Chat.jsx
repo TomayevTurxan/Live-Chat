@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { Box,  useMediaQuery, useTheme, Drawer } from "@mui/material";
+import { Box, useMediaQuery, useTheme, Drawer } from "@mui/material";
 import ChatSidebar from "./ChatSiderBar";
 import ChatConversation from "./ChatConversation";
+import { useChatData } from "../context/contexts";
 
 const Chat = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  const [currentChat, setCurrentChat] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [showChatView, setShowChatView] = useState(false);
+  const { currentChat, setCurrentChat } = useChatData();
 
   const handleChatSelect = (chat) => {
     setCurrentChat(chat);

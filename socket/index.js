@@ -20,6 +20,7 @@ io.on("connection", (socket) => {
 
   //add Message
   socket.on("sendMessage", (message) => {
+    console.log('message',message)
     const user = onlineUsers.find(
       (user) => user.userId === message.recipientId
     );
@@ -27,6 +28,7 @@ io.on("connection", (socket) => {
       io.to(user.socketId).emit("getMessage", message);
       io.to(user.socketId).emit("getNotification", {
         senderId: message.senderId,
+        chatId: message.chatId,
         isRead: false,
         date: new Date(),
       });

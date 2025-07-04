@@ -5,9 +5,9 @@ import "./App.css";
 import theme from "./theme";
 import { ToastContainer } from "react-toastify";
 import { UserProvider } from "./context/UserInfo";
-import { ChatProvider } from "./context/ChatContext";
 import { PotentialChatProvider } from "./context/PotentialChatContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ChatDataProvider } from "./context/ChatContext";
 
 const queryClient = new QueryClient();
 
@@ -22,11 +22,11 @@ function App() {
         <CssBaseline />
         <ToastContainer position="top-right" autoClose={3000} />
         <UserProvider>
-          <ChatProvider>
+          <ChatDataProvider>
             <PotentialChatProvider>
               <Providers />
             </PotentialChatProvider>
-          </ChatProvider>
+          </ChatDataProvider>
         </UserProvider>
       </ThemeProvider>
     </QueryClientProvider>

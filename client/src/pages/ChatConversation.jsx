@@ -26,6 +26,7 @@ import WelcomeBox from "../components/WelcomeBox";
 import DarkMode from "../components/DarkMode";
 import InputEmojiComponent from "../components/InputEmokji";
 import ChipOnline from "../components/Chip";
+import Notification from "./Chat/Notificcation";
 
 const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const queryClient = useQueryClient();
@@ -46,7 +47,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
       senderId: userInfo._id,
       text: message.trim(),
     };
-    console.log('objmessageDataect',messageData)
+    console.log("objmessageDataect", messageData);
     sendMessage.mutate(messageData, {
       onSuccess: () => {
         queryClient.invalidateQueries(["messages"]);
@@ -120,6 +121,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
               <Menu />
             </IconButton>
           )}
+          <Notification />
           <DarkMode />
           <IconButton color="inherit">
             <MoreVert />
@@ -136,14 +138,19 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
           borderColor: "divider",
           backgroundColor: "background.paper",
           display: "flex",
+          flexDirection: "row", 
+          alignItems: "center",
+          gap: 1,
         }}
       >
-        <InputEmojiComponent
-          message={message}
-          setMessage={setMessage}
-          handleSendMessage={handleSendMessage}
-          messageInputRef={messageInputRef}
-        />
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <InputEmojiComponent
+            message={message}
+            setMessage={setMessage}
+            handleSendMessage={handleSendMessage}
+            messageInputRef={messageInputRef}
+          />
+        </Box>
 
         <Button
           variant="contained"
@@ -157,8 +164,6 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
           }
           startIcon={<Send />}
           sx={{
-            order: 3,
-            minWidth: { xs: "100%", sm: "auto" },
             height: { xs: "40px", md: "48px" },
             fontSize: { xs: "0.875rem", md: "1rem" },
             borderRadius: 3,

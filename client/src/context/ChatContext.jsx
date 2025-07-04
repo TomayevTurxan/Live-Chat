@@ -1,29 +1,53 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
+import { useAllUsers, useUserChats } from "../features/queries";
+import { useUser } from "./contexts";
 
-const ChatContext = createContext();
+const ChatDataContext = createContext();
 
-export const ChatProvider = ({ children }) => {
-  const [userChats, setUserChats] = useState([]);
-  const [isUserChatsLoading, setIsUserChatsLoading] = useState(false);
-  const [userChatsError, setUserChatsError] = useState(null);
-  const [currentChat, setCurrentChat] = useState(null);
+export const ChatDataProvider = ({ children }) => {
+  const { userInfo } = useUser();
+  const { data: allUsers, isLoading: loadingUsers } = useAllUsers();
+  const { data: userChats, isLoading: loadingChats } = useUserChats(
+    userInfo?._id
+  );
+
+  const [notifications, setNotifications] = useState(() => {
+    const saved = localStorage.getItem("notifications");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [currentChat, setCurrentChat] = useState(() => {
+    const saved = localStorage.getItem("currentChat");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("notifications", JSON.stringify(notifications));
+  }, [notifications]);
+
+  useEffect(() => {
+    if (currentChat) {
+      localStorage.setItem("currentChat", JSON.stringify(currentChat));
+    } else {
+      localStorage.removeItem("currentChat");
+    }
+  }, [currentChat]);
 
   return (
-    <ChatContext.Provider
+    <ChatDataContext.Provider
       value={{
+        allUsers,
         userChats,
-        isUserChatsLoading,
-        userChatsError,
-        setUserChats,
-        setIsUserChatsLoading,
-        setUserChatsError,
+        loading: loadingUsers || loadingChats,
+        notifications,
+        setNotifications,
         currentChat,
         setCurrentChat,
       }}
     >
       {children}
-    </ChatContext.Provider>
+    </ChatDataContext.Provider>
   );
 };
 
-export default ChatContext;
+export default ChatDataContext;

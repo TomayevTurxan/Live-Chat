@@ -8,19 +8,16 @@ import {
   Modal,
   Tooltip,
   Paper,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import { PersonAdd, Close } from "@mui/icons-material";
-import { useUser } from "../context/contexts";
-import { useUserChats } from "../features/queries";
+import { useChatData, useUser } from "../context/contexts";
 import PotentialChats from "./Chat/PotentialChat";
 import UserChat from "./Chat/UserChat";
 
 const ChatSidebar = ({ onChatSelect, selectedChat }) => {
   const { userInfo } = useUser();
-  console.log('userInfo',userInfo)
-  const { data: userChats } = useUserChats(userInfo?._id);
+  const { userChats } = useChatData();
+
   const [showPotentialChats, setShowPotentialChats] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -40,8 +37,6 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
     userChats?.filter(() => {
       return true;
     }) || [];
-  console.log("filteredChats", filteredChats);
-  console.log("userChats", userChats);
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Box p={2}>

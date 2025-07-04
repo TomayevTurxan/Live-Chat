@@ -1,13 +1,13 @@
 import { LinearProgress, Box, Typography, Avatar } from "@mui/material";
-import { useUser } from "../../context/contexts";
+import { useChatData, useUser } from "../../context/contexts";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useGetMessages } from "../../features/queries";
 import UserContext from "../../context/UserInfo";
 
-const ChatMessages = ({ currentChat, recipientId }) => {
+const ChatMessages = ({ currentChat }) => {
   const { userInfo } = useUser();
   const [messages, setMessages] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  const { notifications, setNotifications } = useChatData();
   const { data: fetchedMessages, isLoading } = useGetMessages(currentChat?._id);
   const { socket } = useContext(UserContext);
   const scroll = useRef();
@@ -17,6 +17,7 @@ const ChatMessages = ({ currentChat, recipientId }) => {
       setMessages(fetchedMessages);
     }
   }, [fetchedMessages]);
+
   //receive messages
   useEffect(() => {
     if (!socket) return;
@@ -40,12 +41,17 @@ const ChatMessages = ({ currentChat, recipientId }) => {
     };
   }, [socket, currentChat]);
 
-
   //scroll
   useEffect(() => {
     scroll.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    if (currentChat?._id) {
+      handleIsReadNotification();
+    }
+  }, [currentChat]);
+  
   const isMyMessage = (message) => {
     return message.senderId === userInfo?._id;
   };
@@ -57,7 +63,16 @@ const ChatMessages = ({ currentChat, recipientId }) => {
     });
   };
 
-  console.log("notii", notifications);
+  const handleIsReadNotification = () => {
+    const updatedNotifications = notifications.map((notif) => {
+      if (notif.chatId === currentChat._id) {
+        return { ...notif, isRead: true };
+      }
+      return notif;
+    });
+    setNotifications(updatedNotifications);
+  };
+
   if (isLoading) return <LinearProgress />;
 
   return (
