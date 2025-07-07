@@ -4,6 +4,7 @@ import {
   getMessagesApi,
   getRecipientUserApi,
   getUserChatsApi,
+  getWithLastMessageApi,
 } from "../api";
 
 export const keys = {
@@ -31,6 +32,12 @@ export const keys = {
   },
   getMessages(messageId) {
     return [...this.messages, messageId];
+  },
+  get withLastMessage() {
+    return [...this.base, "withLastMessage"];
+  },
+  getWithLastMessage(userId) {
+    return [...this.withLastMessage, userId];
   },
 };
 
@@ -60,5 +67,12 @@ export function useGetMessages(messageId) {
   return useQuery({
     queryKey: keys.getMessages(messageId),
     queryFn: () => getMessagesApi(messageId),
+  });
+}
+
+export function useWithLastMessages(userId) {
+  return useQuery({
+    queryKey: keys.getWithLastMessage(userId),
+    queryFn: () => getWithLastMessageApi(userId),
   });
 }

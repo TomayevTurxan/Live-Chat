@@ -48,5 +48,50 @@ const findChat = async (req, res) => {
 };
 
 
-module.exports = { createChat, findUserChats, findChat };
+const findUserChatsWithLastMessage = async (req, res) => {
+  const userId = req.params.userId;
 
+  try {
+    const chats = await chatModel.aggregate([
+      { $match: { members: userId } },
+      {
+        $lookup: {
+          from: "messages",
+          let: { chatId: { $toString: "$_id" } }, 
+          pipeline: [
+            { $match: { $expr: { $eq: ["$chatId", "$$chatId"] } } },
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "lastMessage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$lastMessage",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          members: 1,
+          lastMessage: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json(chats);
+  } catch (error) {
+    console.error("Aggregation error:", error); 
+    res
+      .status(500)
+      .json({ message: "Error fetching chats", error: error.message });
+  }
+};
+
+module.exports = {
+  createChat,
+  findUserChats,
+  findChat,
+  findUserChatsWithLastMessage,
+};

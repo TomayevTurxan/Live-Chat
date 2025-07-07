@@ -3,6 +3,7 @@ import Chat from "../pages/Chat";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Login/Register";
 import AuthLayout from "../layouts/AuthLayout";
+import ProtectedRoute from "./ProtectedRoute";
 
 const routes = [
   {
@@ -29,7 +30,11 @@ const routes = [
   },
   {
     path: "/chat",
-    element: <Chat />,
+    element: (
+      <ProtectedRoute>
+        <Chat />
+      </ProtectedRoute>
+    ),
   },
 ];
 

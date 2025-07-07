@@ -1,4 +1,4 @@
-import { useState, useRef, useContext } from "react";
+import { useState, useRef, useContext, useEffect } from "react";
 import {
   Box,
   Avatar,
@@ -7,14 +7,18 @@ import {
   Button,
   useMediaQuery,
   useTheme,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import {
-  LightMode,
   DarkMode as DarkModeIcon,
-  Menu,
+  Menu as MenuIcon,
   ArrowBack,
   Send,
   MoreVert,
+  Logout,
 } from "@mui/icons-material";
 import ChatMessages from "./Chat/ChatMessages";
 import { usePostMessage } from "../features/mutations";
@@ -27,18 +31,43 @@ import DarkMode from "../components/DarkMode";
 import InputEmojiComponent from "../components/InputEmokji";
 import ChipOnline from "../components/Chip";
 import Notification from "./Chat/Notificcation";
+import { useNavigate } from "react-router-dom";
 
 const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const theme = useTheme();
   const [message, setMessage] = useState("");
+  const [anchorEl, setAnchorEl] = useState(null);
   const messageInputRef = useRef(null);
   const sendMessage = usePostMessage();
-  const { userInfo } = useUser();
+  const { userInfo, logout } = useUser();
   const { socket } = useContext(UserContext);
-  const recipientId = currentChat?.members?.find((id) => id !== userInfo._id);
+  const recipientId = currentChat?.members?.find((id) => id !== userInfo?._id);
   const { data: recipientUser } = useRecipientUser(recipientId);
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const open = Boolean(anchorEl);
+
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    handleMenuClose();
+
+    if (socket) {
+      socket.disconnect();
+    }
+
+    queryClient.clear();
+
+    logout();
+    navigate("/login");
+  };
 
   const handleSendMessage = () => {
     if (!message.trim()) return;
@@ -47,7 +76,6 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
       senderId: userInfo._id,
       text: message.trim(),
     };
-    console.log("objmessageDataect", messageData);
     sendMessage.mutate(messageData, {
       onSuccess: () => {
         queryClient.invalidateQueries(["messages"]);
@@ -118,14 +146,63 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
         <Box display="flex" alignItems="center" gap={1}>
           {isMobile && onMenuToggle && (
             <IconButton onClick={onMenuToggle} color="inherit">
-              <Menu />
+              <MenuIcon />
             </IconButton>
           )}
           <Notification />
           <DarkMode />
-          <IconButton color="inherit">
+          <IconButton
+            color="inherit"
+            onClick={handleMenuClick}
+            aria-controls={open ? "account-menu" : undefined}
+            aria-haspopup="true"
+            aria-expanded={open ? "true" : undefined}
+          >
             <MoreVert />
           </IconButton>
+
+          <Menu
+            id="account-menu"
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleMenuClose}
+            onClick={handleMenuClose}
+            PaperProps={{
+              elevation: 0,
+              sx: {
+                overflow: "visible",
+                filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
+                mt: 1.5,
+                "& .MuiAvatar-root": {
+                  width: 32,
+                  height: 32,
+                  ml: -0.5,
+                  mr: 1,
+                },
+                "&::before": {
+                  content: '""',
+                  display: "block",
+                  position: "absolute",
+                  top: 0,
+                  right: 14,
+                  width: 10,
+                  height: 10,
+                  bgcolor: "background.paper",
+                  transform: "translateY(-50%) rotate(45deg)",
+                  zIndex: 0,
+                },
+              },
+            }}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+          >
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <Logout fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Logout</ListItemText>
+            </MenuItem>
+          </Menu>
         </Box>
       </Box>
 
@@ -138,7 +215,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
           borderColor: "divider",
           backgroundColor: "background.paper",
           display: "flex",
-          flexDirection: "row", 
+          flexDirection: "row",
           alignItems: "center",
           gap: 1,
         }}

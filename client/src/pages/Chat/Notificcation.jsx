@@ -12,19 +12,12 @@ import {
   Drawer,
 } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import { useChatData, useUser } from "../../context/contexts";
+import { useChatData } from "../../context/contexts";
 
 const Notification = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const {
-    allUsers,
-    notifications,
-    setNotifications,
-  } = useChatData();
-
-  const { user } = useUser();
+  const { allUsers, notifications, setNotifications } = useChatData();
   const open = Boolean(anchorEl);
 
   const unread = notifications?.filter((n) => !n.isRead) || [];
@@ -73,8 +66,6 @@ const Notification = () => {
     (a, b) => new Date(b.date) - new Date(a.date)
   );
 
-
-
   return (
     <>
       <IconButton color="inherit" onClick={handleClick}>
@@ -109,8 +100,8 @@ const Notification = () => {
             </Typography>
           </MenuItem>
         ) : (
-          <>
-            {groupedList.slice(0, 5).map((notification, index) => (
+          [
+            ...groupedList.slice(0, 5).map((notification, index) => (
               <MenuItem
                 key={index}
                 onClick={() => {
@@ -150,9 +141,8 @@ const Notification = () => {
                   }
                 />
               </MenuItem>
-            ))}
-
-            <Box sx={{ px: 2, py: 1 }}>
+            )),
+            <Box sx={{ px: 2, py: 1 }} key="view-all-btn">
               <Button
                 variant="contained"
                 fullWidth
@@ -163,8 +153,8 @@ const Notification = () => {
               >
                 View All Notifications
               </Button>
-            </Box>
-          </>
+            </Box>,
+          ]
         )}
       </Menu>
 
@@ -172,7 +162,7 @@ const Notification = () => {
         anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        PaperProps={{ sx: { width: 360 } }} // ✅ FIXED: Correct syntax
+        slotProps={{ sx: { width: 360 } }}
       >
         <Box sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>

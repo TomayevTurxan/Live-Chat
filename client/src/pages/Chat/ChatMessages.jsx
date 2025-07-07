@@ -1,13 +1,15 @@
 import { LinearProgress, Box, Typography, Avatar } from "@mui/material";
 import { useChatData, useUser } from "../../context/contexts";
-import { useContext, useEffect, useRef, useState } from "react";
-import { useGetMessages } from "../../features/queries";
+import { useContext, useEffect, useRef } from "react";
+import { keys, useGetMessages } from "../../features/queries";
 import UserContext from "../../context/UserInfo";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ChatMessages = ({ currentChat }) => {
+  const queryClient = useQueryClient();
   const { userInfo } = useUser();
-  const [messages, setMessages] = useState([]);
-  const { notifications, setNotifications } = useChatData();
+  const { notifications, setNotifications, setMessages, messages } =
+    useChatData();
   const { data: fetchedMessages, isLoading } = useGetMessages(currentChat?._id);
   const { socket } = useContext(UserContext);
   const scroll = useRef();
@@ -18,13 +20,15 @@ const ChatMessages = ({ currentChat }) => {
     }
   }, [fetchedMessages]);
 
-  //receive messages
   useEffect(() => {
     if (!socket) return;
 
     socket.on("getMessage", (res) => {
       if (currentChat?._id !== res.chatId) return;
       setMessages((prev) => [...prev, res]);
+      queryClient.invalidateQueries({
+        queryKey: keys.getWithLastMessage(userInfo._id),
+      });
     });
 
     socket.on("getNotification", (res) => {
@@ -46,12 +50,13 @@ const ChatMessages = ({ currentChat }) => {
     scroll.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  //currentChat
   useEffect(() => {
     if (currentChat?._id) {
       handleIsReadNotification();
     }
   }, [currentChat]);
-  
+
   const isMyMessage = (message) => {
     return message.senderId === userInfo?._id;
   };

@@ -10,12 +10,11 @@ export const ChatDataProvider = ({ children }) => {
   const { data: userChats, isLoading: loadingChats } = useUserChats(
     userInfo?._id
   );
-
+  const [messages, setMessages] = useState([]);
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem("notifications");
     return saved ? JSON.parse(saved) : [];
   });
-
   const [currentChat, setCurrentChat] = useState(() => {
     const saved = localStorage.getItem("currentChat");
     return saved ? JSON.parse(saved) : null;
@@ -43,6 +42,8 @@ export const ChatDataProvider = ({ children }) => {
         setNotifications,
         currentChat,
         setCurrentChat,
+        messages,
+        setMessages,
       }}
     >
       {children}

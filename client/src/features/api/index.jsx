@@ -38,3 +38,8 @@ export const postMessage = async (data) => {
   const response = await axiosInstance.post(`messages`, data);
   return response.data;
 };
+
+export const getWithLastMessageApi = async (userId) => {
+  const response = await axiosInstance.get(`chats/withLastMessage/${userId}`);
+  return response.data;
+};

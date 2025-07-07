@@ -5,22 +5,34 @@ import {
   Typography,
   Stack,
   Chip,
-  ListItemAvatar,
 } from "@mui/material";
 import CircleIcon from "@mui/icons-material/Circle";
 import { useContext } from "react";
-import { useRecipientUser } from "../../features/queries";
+import { useRecipientUser, useWithLastMessages } from "../../features/queries";
 import UserContext from "../../context/UserInfo";
+import { useChatData } from "../../context/contexts";
 
 const UserChat = ({ chat, user }) => {
   const recipientId = chat?.members?.find((id) => id && id !== user?._id);
   const { data: recipientUser } = useRecipientUser(recipientId);
   const { onlineUsers } = useContext(UserContext);
-  const lastMessage = "Text Message";
-  const lastMessageDate = "12/12/2022";
-  const unreadCount = 2;
+  const { notifications } = useChatData();
+  const { data: withLastMessages } = useWithLastMessages(user?._id);
+  const currentChatData = withLastMessages?.find(
+    (chatData) => chatData._id === chat._id
+  );
+
+  const lastMessage = currentChatData?.lastMessage?.text || "";
+  const lastMessageDate = currentChatData?.lastMessage?.createdAt
+    ? new Date(currentChatData.lastMessage.createdAt).toLocaleDateString()
+    : "";
+
+  const unreadCount = notifications?.filter(
+    (n) => n?.senderId === recipientUser?._id && !n?.isRead
+  ).length;
 
   if (!recipientUser) return null;
+  
   return (
     <Grid
       container
@@ -45,21 +57,24 @@ const UserChat = ({ chat, user }) => {
             justifyContent="space-between"
             alignItems="center"
           >
-            <Typography
-              variant="body2"
-              noWrap
-              sx={{ maxWidth: "180px", color: "text.secondary" }}
-            >
-              {lastMessage}
-            </Typography>
+            {lastMessage && (
+              <Typography
+                variant="body2"
+                noWrap
+                sx={{ maxWidth: "180px", color: "text.secondary" }}
+              >
+                {lastMessage}
+              </Typography>
+            )}
 
             <Stack direction="row" spacing={1} alignItems="center">
               {onlineUsers?.some(
                 (onlineUser) => onlineUser.userId === recipientUser._id
-              ) ? (
-                <CircleIcon sx={{ color: "green", fontSize: 12 }} />
-              ) : null}
-              <Chip label={unreadCount} size="small" color="primary" />
+              ) && <CircleIcon sx={{ color: "green", fontSize: 12 }} />}
+
+              {unreadCount > 0 && (
+                <Chip label={unreadCount} size="small" color="primary" />
+              )}
             </Stack>
           </Box>
         </Box>

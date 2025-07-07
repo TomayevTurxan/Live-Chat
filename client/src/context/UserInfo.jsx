@@ -45,10 +45,21 @@ export const UserProvider = ({ children }) => {
     };
   }, [socket]);
 
-  console.log("onlineUsers", onlineUsers);
+  const logout = () => {
+    setUserInfo(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  };
   return (
     <UserContext.Provider
-      value={{ userInfo, setUserInfo, onlineUsers, setOnlineUsers, socket }}
+      value={{
+        userInfo,
+        setUserInfo,
+        onlineUsers,
+        setOnlineUsers,
+        socket,
+        logout,
+      }}
     >
       {children}
     </UserContext.Provider>
