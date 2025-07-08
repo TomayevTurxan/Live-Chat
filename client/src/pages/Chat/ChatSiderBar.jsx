@@ -10,9 +10,9 @@ import {
   Paper,
 } from "@mui/material";
 import { PersonAdd, Close } from "@mui/icons-material";
-import { useChatData, useUser } from "../context/contexts";
-import PotentialChats from "./Chat/PotentialChat";
-import UserChat from "./Chat/UserChat";
+import UserChat from "./UserChat";
+import PotentialChats from "./PotentialChat";
+import { useChatData, useUser } from "../../context/contexts";
 
 const ChatSidebar = ({ onChatSelect, selectedChat }) => {
   const { userInfo } = useUser();
@@ -160,6 +160,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
       >
         <Paper
           sx={{
+            width: "450px",
             overflow: "auto",
             outline: "none",
           }}

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Box, useMediaQuery, useTheme, Drawer } from "@mui/material";
-import ChatSidebar from "./ChatSiderBar";
+import { useChatData } from "../../context/contexts";
 import ChatConversation from "./ChatConversation";
-import { useChatData } from "../context/contexts";
+import ChatSidebar from "./ChatSiderBar";
+import { Outlet, useMatch } from "react-router-dom";
 
 const Chat = () => {
   const theme = useTheme();
@@ -11,6 +12,8 @@ const Chat = () => {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [showChatView, setShowChatView] = useState(false);
   const { currentChat, setCurrentChat } = useChatData();
+
+  const showUserDetail = !!useMatch("/chat/user/:userId");
 
   const handleChatSelect = (chat) => {
     setCurrentChat(chat);
@@ -36,7 +39,7 @@ const Chat = () => {
 
   if (!isMobile) {
     return (
-      <Box sx={{ height: "100vh", display: "flex" }}>
+      <Box sx={{ display: "flex", height: "100vh" }}>
         <Box
           sx={{
             width: { md: "320px", lg: "360px" },
@@ -51,18 +54,21 @@ const Chat = () => {
           />
         </Box>
 
-        <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        {!showUserDetail ? (
           <ChatConversation
             chatId={currentChat?._id}
             currentChat={currentChat}
             onBackToChats={handleBackToChats}
             onMenuToggle={handleDrawerToggle}
           />
-        </Box>
+        ) : (
+          <Outlet />
+        )}
       </Box>
     );
   }
 
+  // --- MOBILE VERSION ---
   return (
     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       {!showChatView ? (
@@ -71,13 +77,16 @@ const Chat = () => {
           selectedChat={selectedChat}
         />
       ) : (
-        <ChatConversation
-          currentChat={currentChat}
-          onBackToChats={handleBackToChats}
-          onMenuToggle={handleDrawerToggle}
-        />
+        !showUserDetail && (
+          <ChatConversation
+            currentChat={currentChat}
+            onBackToChats={handleBackToChats}
+            onMenuToggle={handleDrawerToggle}
+          />
+        )
       )}
 
+      {/* Drawer for Mobile */}
       <Drawer
         variant="temporary"
         anchor="left"
@@ -95,6 +104,24 @@ const Chat = () => {
           selectedChat={selectedChat}
         />
       </Drawer>
+
+      {/* Outlet full screen in mobile */}
+      {showUserDetail && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "background.default",
+            zIndex: 1300, // higher than Drawer
+            overflowY: "auto",
+          }}
+        >
+          <Outlet />
+        </Box>
+      )}
     </Box>
   );
 };

@@ -1,4 +1,4 @@
-import { useState, useRef, useContext, useEffect } from "react";
+import { useState, useRef, useContext } from "react";
 import {
   Box,
   Avatar,
@@ -13,25 +13,24 @@ import {
   ListItemText,
 } from "@mui/material";
 import {
-  DarkMode as DarkModeIcon,
   Menu as MenuIcon,
   ArrowBack,
   Send,
   MoreVert,
   Logout,
 } from "@mui/icons-material";
-import ChatMessages from "./Chat/ChatMessages";
-import { usePostMessage } from "../features/mutations";
 import { useQueryClient } from "@tanstack/react-query";
-import { useUser } from "../context/contexts";
-import { useRecipientUser } from "../features/queries";
-import UserContext from "../context/UserInfo";
-import WelcomeBox from "../components/WelcomeBox";
-import DarkMode from "../components/DarkMode";
-import InputEmojiComponent from "../components/InputEmokji";
-import ChipOnline from "../components/Chip";
-import Notification from "./Chat/Notificcation";
 import { useNavigate } from "react-router-dom";
+import ChatMessages from "./ChatMessages";
+import { usePostMessage } from "../../features/mutations";
+import UserContext from "../../context/UserInfo";
+import { useUser } from "../../context/contexts";
+import { useRecipientUser } from "../../features/queries";
+import WelcomeBox from "../../components/WelcomeBox";
+import InputEmojiComponent from "../../components/InputEmokji";
+import ChipOnline from "../../components/Chip";
+import Notification from "./Notificcation";
+import DarkMode from "../../components/DarkMode";
 
 const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const navigate = useNavigate();
@@ -47,6 +46,12 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const { data: recipientUser } = useRecipientUser(recipientId);
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const open = Boolean(anchorEl);
+
+  const handleAvatarClick = () => {
+    if (recipientUser?._id) {
+      navigate(`/chat/user/${recipientUser._id}`);
+    }
+  };
 
   const handleMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -97,7 +102,13 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   if (!recipientUser) return null;
 
   return (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Box
         sx={{
           p: 2,
@@ -119,6 +130,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
           )}
 
           <Avatar
+            onClick={handleAvatarClick}
             src={recipientUser.avatar}
             sx={{
               mr: { xs: 1, md: 2 },
@@ -162,37 +174,10 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
           </IconButton>
 
           <Menu
-            id="account-menu"
             anchorEl={anchorEl}
             open={open}
             onClose={handleMenuClose}
             onClick={handleMenuClose}
-            PaperProps={{
-              elevation: 0,
-              sx: {
-                overflow: "visible",
-                filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
-                mt: 1.5,
-                "& .MuiAvatar-root": {
-                  width: 32,
-                  height: 32,
-                  ml: -0.5,
-                  mr: 1,
-                },
-                "&::before": {
-                  content: '""',
-                  display: "block",
-                  position: "absolute",
-                  top: 0,
-                  right: 14,
-                  width: 10,
-                  height: 10,
-                  bgcolor: "background.paper",
-                  transform: "translateY(-50%) rotate(45deg)",
-                  zIndex: 0,
-                },
-              },
-            }}
             transformOrigin={{ horizontal: "right", vertical: "top" }}
             anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
           >

@@ -1,9 +1,10 @@
 import { Navigate } from "react-router-dom";
-import Chat from "../pages/Chat";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Login/Register";
 import AuthLayout from "../layouts/AuthLayout";
 import ProtectedRoute from "./ProtectedRoute";
+import Chat from "../pages/Chat/Chat";
+import UserDetail from "../pages/Chat/UserDetail";
 
 const routes = [
   {
@@ -35,6 +36,12 @@ const routes = [
         <Chat />
       </ProtectedRoute>
     ),
+    children: [
+      {
+        path: "user/:userId",
+        element: <UserDetail />,
+      },
+    ],
   },
 ];
 
