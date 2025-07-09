@@ -1,4 +1,5 @@
 const chatModel = require("../models/chatModel");
+const userModel = require("../models/userModel");
 
 const createChat = async (req, res) => {
   const { firstId, secondId } = req.body;
@@ -21,16 +22,31 @@ const createChat = async (req, res) => {
   }
 };
 
+
 const findUserChats = async (req, res) => {
   const userId = req.params.userId;
+
   try {
+    const currentUser = await userModel.findById(userId).select("blockedUsers");
+    const blockedIds = currentUser.blockedUsers.map((id) => id.toString());
+
     const chats = await chatModel.find({
       members: { $in: [userId] },
     });
-    res.status(200).json(chats);
+
+    const filteredChats = chats.filter((chat) => {
+      const otherMember = chat.members.find(
+        (member) => member.toString() !== userId
+      );
+      if (!otherMember) return false;
+
+      return !blockedIds.includes(otherMember.toString());
+    });
+
+    res.status(200).json(filteredChats);
   } catch (error) {
     console.log("Error:", error);
-    res.status(500).json(error);
+    res.status(500).json({ message: "Error fetching chats", error });
   }
 };
 
@@ -47,7 +63,6 @@ const findChat = async (req, res) => {
   }
 };
 
-
 const findUserChatsWithLastMessage = async (req, res) => {
   const userId = req.params.userId;
 
@@ -57,7 +72,7 @@ const findUserChatsWithLastMessage = async (req, res) => {
       {
         $lookup: {
           from: "messages",
-          let: { chatId: { $toString: "$_id" } }, 
+          let: { chatId: { $toString: "$_id" } },
           pipeline: [
             { $match: { $expr: { $eq: ["$chatId", "$$chatId"] } } },
             { $sort: { createdAt: -1 } },
@@ -82,7 +97,7 @@ const findUserChatsWithLastMessage = async (req, res) => {
 
     res.status(200).json(chats);
   } catch (error) {
-    console.error("Aggregation error:", error); 
+    console.error("Aggregation error:", error);
     res
       .status(500)
       .json({ message: "Error fetching chats", error: error.message });

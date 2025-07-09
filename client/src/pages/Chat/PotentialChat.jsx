@@ -9,37 +9,24 @@ import {
   ListItemText,
   Paper,
   CircularProgress,
+  LinearProgress,
 } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
 import { useCreateChat } from "../../features/mutations";
-import { useChatData, useUser } from "../../context/contexts";
+import { useUser } from "../../context/contexts";
 import { useQueryClient } from "@tanstack/react-query";
 import UserContext from "../../context/UserInfo";
+import { usePotentialChatsUser } from "../../features/queries";
 
 const PotentialChats = () => {
   const queryClient = useQueryClient();
   const { onlineUsers } = useContext(UserContext);
   const { userInfo } = useUser();
-  const { allUsers, userChats } = useChatData();
-  const [potentialChats, setPotentialChats] = useState([]);
+  const { data: potentialChatsUser, isLoading } = usePotentialChatsUser(
+    userInfo?._id
+  );
   const [loadingId, setLoadingId] = useState(null);
   const createChatMutation = useCreateChat();
-
-  useEffect(() => {
-    if (!userInfo?._id || !Array.isArray(allUsers) || !Array.isArray(userChats))
-      return;
-
-    const existingChatUserIds = userChats.flatMap((chat) =>
-      chat.members.filter((id) => id !== userInfo._id)
-    );
-
-    const filtered = allUsers.filter(
-      (user) =>
-        user._id !== userInfo._id && !existingChatUserIds.includes(user._id)
-    );
-
-    setPotentialChats(filtered);
-  }, [allUsers, userChats, userInfo]);
 
   const handleCreateChat = (otherUserId) => {
     if (!userInfo?._id || !otherUserId) return;
@@ -51,11 +38,8 @@ const PotentialChats = () => {
         secondId: otherUserId,
       },
       {
-        onSuccess: (newChat) => {
+        onSuccess: () => {
           queryClient.invalidateQueries(["userChats"]);
-          setPotentialChats((prev) =>
-            prev.filter((u) => !newChat.members.includes(u._id))
-          );
           setLoadingId(null);
         },
         onError: () => {
@@ -64,8 +48,9 @@ const PotentialChats = () => {
       }
     );
   };
+  if (isLoading) return <LinearProgress />;
 
-  if (!potentialChats || potentialChats.length === 0) {
+  if (!potentialChatsUser || potentialChatsUser.length === 0) {
     return (
       <Paper elevation={1} sx={{ p: 2, m: 2 }}>
         <Typography variant="h6" color="text.secondary" align="center">
@@ -78,7 +63,7 @@ const PotentialChats = () => {
   return (
     <Paper elevation={1} sx={{ m: 2 }}>
       <List sx={{ width: "100%", bgcolor: "background.paper" }}>
-        {potentialChats.map((userItem, index) => (
+        {potentialChatsUser.map((userItem, index) => (
           <ListItem
             key={userItem._id || index}
             onClick={() => handleCreateChat(userItem._id)}
@@ -86,7 +71,9 @@ const PotentialChats = () => {
               cursor: "pointer",
               "&:hover": { bgcolor: "action.hover" },
               borderBottom:
-                index < potentialChats.length - 1 ? "1px solid #eee" : "none",
+                index < potentialChatsUser.length - 1
+                  ? "1px solid #eee"
+                  : "none",
             }}
           >
             <ListItemAvatar>

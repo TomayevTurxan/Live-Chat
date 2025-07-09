@@ -21,6 +21,12 @@ const userSchema = new mongoose.Schema(
       minLength: 3,
       maxLength: 1024,
     },
+    blockedUsers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );

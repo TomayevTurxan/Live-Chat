@@ -10,6 +10,7 @@ import {
 import { Close, Email, Person, Schedule, Message } from "@mui/icons-material";
 import ChipOnline from "../../components/Chip";
 import { useRecipientUser } from "../../features/queries";
+import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 
 const UserDetail = () => {
   const { userId } = useParams();
@@ -48,7 +49,7 @@ const UserDetail = () => {
   }
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ width: "100%", maxWidth: 800, mx: "auto", p: 3 }}>
       <Box
         sx={{
           display: "flex",
@@ -57,10 +58,12 @@ const UserDetail = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h5">User Profile</Typography>
-        <IconButton onClick={handleBack}>
-          <Close />
-        </IconButton>
+        <Typography variant="h5">
+          <IconButton onClick={handleBack}>
+            <KeyboardBackspaceIcon />
+          </IconButton>
+          User Profile
+        </Typography>
       </Box>
 
       <Grid container spacing={4}>
@@ -95,7 +98,6 @@ const UserDetail = () => {
           </Box>
         </Grid>
 
-
         <Grid size={12}>
           <Grid container spacing={3}>
             <Grid size={12}>
@@ -112,7 +114,6 @@ const UserDetail = () => {
                 </Typography>
               </Box>
             </Grid>
-
 
             {recipientUser.email && (
               <Grid item size={12}>
@@ -131,7 +132,6 @@ const UserDetail = () => {
               </Grid>
             )}
 
-
             {recipientUser.createdAt && (
               <Grid size={12}>
                 <Box>
@@ -148,7 +148,6 @@ const UserDetail = () => {
                 </Box>
               </Grid>
             )}
-
 
             {recipientUser.bio && (
               <Grid item size={12}>

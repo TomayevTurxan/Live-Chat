@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   allUsersApi,
   getMessagesApi,
+  getPotentialChatsUserApi,
   getRecipientUserApi,
   getUserChatsApi,
   getWithLastMessageApi,
@@ -39,6 +40,12 @@ export const keys = {
   getWithLastMessage(userId) {
     return [...this.withLastMessage, userId];
   },
+  get potentialChatUsers() {
+    return [...this.base, "potentialChatUsers"];
+  },
+  getPotentialChatUsers(userId) {
+    return [...this.potentialChatUsers, userId];
+  },
 };
 
 export function useUserChats(userId) {
@@ -74,5 +81,12 @@ export function useWithLastMessages(userId) {
   return useQuery({
     queryKey: keys.getWithLastMessage(userId),
     queryFn: () => getWithLastMessageApi(userId),
+  });
+}
+
+export function usePotentialChatsUser(userId) {
+  return useQuery({
+    queryKey: keys.getPotentialChatUsers(userId),
+    queryFn: () => getPotentialChatsUserApi(userId),
   });
 }

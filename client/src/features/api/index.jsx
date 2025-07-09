@@ -43,3 +43,8 @@ export const getWithLastMessageApi = async (userId) => {
   const response = await axiosInstance.get(`chats/withLastMessage/${userId}`);
   return response.data;
 };
+
+export const getPotentialChatsUserApi = async (userId) => {
+  const response = await axiosInstance.get(`users/potentialChatsUser/${userId}`);
+  return response.data;
+};
