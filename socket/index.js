@@ -2,7 +2,10 @@ const { Server } = require("socket.io");
 
 const io = new Server({
   cors: {
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://live-chat-i8vwazwxm-tomayevturxans-projects.vercel.app",
+    ],
   },
 });
 
