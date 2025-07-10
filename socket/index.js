@@ -1,11 +1,14 @@
 const { Server } = require("socket.io");
 
-const io = new Server({
+const app = express();
+app.use(cors());
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "https://live-chat-i8vwazwxm-tomayevturxans-projects.vercel.app",
-    ],
+    origin: ["https://live-chat-i8vwazwxm-tomayevturxans-projects.vercel.app"],
+    methods: ["GET", "POST"],
   },
 });
 
