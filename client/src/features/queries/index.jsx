@@ -52,6 +52,7 @@ export function useUserChats(userId) {
   return useQuery({
     queryKey: keys.getUserChats(userId),
     queryFn: () => getUserChatsApi(userId),
+    enabled: !!userId,
   });
 }
 
