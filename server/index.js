@@ -36,7 +36,9 @@ mongoose
 //socket
 const io = new Server(expressServer, {
   cors: {
-    origin: ["https://live-chat-back-end.onrender.com"],
+    origin: ["https://live-chat-z3ydte25s-tomayevturxans-projects.vercel.app"],
+    methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 let onlineUsers = [];
