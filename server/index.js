@@ -36,7 +36,7 @@ mongoose
 //socket
 const io = new Server(expressServer, {
   cors: {
-    origin: ["https://live-chat-sepia.vercel.app"],
+    origin: ["https://live-chat-back-end.onrender.com"],
   },
 });
 let onlineUsers = [];
