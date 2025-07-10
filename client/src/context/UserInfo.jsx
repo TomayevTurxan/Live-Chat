@@ -16,7 +16,7 @@ export const UserProvider = ({ children }) => {
   const [onlineUsers, setOnlineUsers] = useState(null);
 
   useEffect(() => {
-    if (userInfo) {
+    if (userInfo) {   
       localStorage.setItem("userInfo", JSON.stringify(userInfo));
     } else {
       localStorage.removeItem("userInfo");
