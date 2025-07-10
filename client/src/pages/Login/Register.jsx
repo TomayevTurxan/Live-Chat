@@ -1,10 +1,7 @@
 import {
   Box,
   Typography,
-  Checkbox,
-  FormControlLabel,
 } from "@mui/material";
-import Link from "../../components/Link";
 import RegisterForm from "./RegisterForm";
 
 const Register = () => {
