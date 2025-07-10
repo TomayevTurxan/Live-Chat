@@ -20,7 +20,6 @@ io.on("connection", (socket) => {
 
   //add Message
   socket.on("sendMessage", (message) => {
-    console.log('message',message)
     const user = onlineUsers.find(
       (user) => user.userId === message.recipientId
     );

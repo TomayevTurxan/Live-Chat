@@ -45,6 +45,13 @@ export const getWithLastMessageApi = async (userId) => {
 };
 
 export const getPotentialChatsUserApi = async (userId) => {
-  const response = await axiosInstance.get(`users/potentialChatsUser/${userId}`);
+  const response = await axiosInstance.get(
+    `users/potentialChatsUser/${userId}`
+  );
+  return response.data;
+};
+
+export const blockUser = async (data) => {
+  const response = await axiosInstance.post(`users/blockUser`, data);
   return response.data;
 };

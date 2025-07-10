@@ -127,16 +127,18 @@ const getPotentialChatsUser = async (req, res) => {
     const existingChatUserIds = existingChats.flatMap((chat) =>
       chat.members
         .filter((id) => id.toString() !== currentUserId)
-        .map((id) => new mongoose.Types.ObjectId(id)) 
+        .map((id) => new mongoose.Types.ObjectId(id))
     );
 
     const youBlocked = currentUser.blockedUsers.map(
       (id) => new mongoose.Types.ObjectId(id)
     );
 
-    const blockedYouUsers = await userModel.find({
-      blockedUsers: currentUser._id,
-    }).select("_id");
+    const blockedYouUsers = await userModel
+      .find({
+        blockedUsers: currentUser._id,
+      })
+      .select("_id");
 
     const blockedYou = blockedYouUsers.map((user) => user._id);
 
@@ -144,12 +146,15 @@ const getPotentialChatsUser = async (req, res) => {
       ...youBlocked,
       ...blockedYou,
       ...existingChatUserIds,
-      new mongoose.Types.ObjectId(currentUserId), 
+      new mongoose.Types.ObjectId(currentUserId),
     ];
 
-    const potentialUsers = await userModel.find({
-      _id: { $nin: excludedIds },
-    }).select("name email createdAt updatedAt").sort({ name: 1 });
+    const potentialUsers = await userModel
+      .find({
+        _id: { $nin: excludedIds },
+      })
+      .select("name email createdAt updatedAt")
+      .sort({ name: 1 });
 
     res.status(200).json(potentialUsers);
   } catch (error) {
@@ -160,7 +165,6 @@ const getPotentialChatsUser = async (req, res) => {
     });
   }
 };
-
 
 // Block a user
 const blockUser = async (req, res) => {
@@ -185,7 +189,9 @@ const blockUser = async (req, res) => {
     blocker.blockedUsers.push(blockedId);
     await blocker.save();
 
-    res.status(200).json("User blocked successfully.");
+    res.status(200).json({
+      message: "User blocked successfully.",
+    });
   } catch (error) {
     console.log("Error blocking user:", error);
     res.status(500).json("Internal server error.");
@@ -234,7 +240,9 @@ const getBlockedUsers = async (req, res) => {
       .populate("blockedUsers", "name email createdAt");
 
     if (!user) {
-      return res.status(404).json("User not found.");
+      return res.status(404).json({
+        message: "User not found.",
+      });
     }
 
     res.status(200).json(user.blockedUsers);

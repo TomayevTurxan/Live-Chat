@@ -11,21 +11,42 @@ import { Close, Email, Person, Schedule, Message } from "@mui/icons-material";
 import ChipOnline from "../../components/Chip";
 import { useRecipientUser } from "../../features/queries";
 import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
+import { useBlockUser } from "../../features/mutations";
+import { useUser } from "../../context/contexts";
+import { useQueryClient } from "@tanstack/react-query";
 
 const UserDetail = () => {
   const { userId } = useParams();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { userInfo } = useUser();
   const { data: recipientUser, isLoading } = useRecipientUser(userId);
-
   const handleBack = () => navigate("/chat");
   const handleStartChat = () => navigate("/chat");
-
+  const blockUser = useBlockUser();
+  console.log("userInfo", userInfo);
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
+
+  const handleBlockUser = () => {
+    const messageData = {
+      blockerId: userInfo?._id,
+      blockedId: userId,
+    };
+    blockUser.mutate(messageData, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["users"]);
+        navigate("/chat");
+      },
+      onError: (error) => {
+        console.error("Block user failed:", error);
+      },
+    });
+  };
 
   if (isLoading) {
     return (
@@ -157,6 +178,15 @@ const UserDetail = () => {
                 <Typography variant="body1">{recipientUser.bio}</Typography>
               </Grid>
             )}
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<Close />}
+              onClick={handleBlockUser}
+              fullWidth
+            >
+              Block User
+            </Button>
           </Grid>
         </Grid>
       </Grid>
