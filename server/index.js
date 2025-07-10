@@ -22,7 +22,7 @@ app.get("/", (req, res) => {
   res.send("Welcome");
 });
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT;
 
 const expressServer = app.listen(port, (req, res) => {
   console.log(`Server running on port..: ${port}`);
@@ -36,9 +36,7 @@ mongoose
 //socket
 const io = new Server(expressServer, {
   cors: {
-    origin: ["https://live-chat-z3ydte25s-tomayevturxans-projects.vercel.app"],
-    methods: ["GET", "POST"],
-    credentials: true,
+    origin: "http://localhost:5173",
   },
 });
 let onlineUsers = [];

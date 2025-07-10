@@ -16,7 +16,7 @@ export const UserProvider = ({ children }) => {
   const [onlineUsers, setOnlineUsers] = useState(null);
 
   useEffect(() => {
-    if (userInfo) {   
+    if (userInfo) {
       localStorage.setItem("userInfo", JSON.stringify(userInfo));
     } else {
       localStorage.removeItem("userInfo");
@@ -25,7 +25,7 @@ export const UserProvider = ({ children }) => {
 
   //configuration socket
   useEffect(() => {
-    const newSocket = io(import.meta.env.VITE_SOCKET_PORT);
+    const newSocket = io("http://localhost:5000");
     setSocket(newSocket);
 
     return () => {
