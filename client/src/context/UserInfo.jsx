@@ -24,13 +24,15 @@ export const UserProvider = ({ children }) => {
   }, [userInfo]);
 
   //configuration socket
-  useEffect(() => {
-    const newSocket = io("https://live-chat-back-end.onrender.com");
-    setSocket(newSocket);
 
-    return () => {
-      newSocket.disconnect();
-    };
+  useEffect(() => {
+    if (userInfo) {
+      const newSocket = io("https://live-chat-back-end.onrender.com");
+      setSocket(newSocket);
+      return () => {
+        newSocket.disconnect();
+      };
+    }
   }, [userInfo]);
 
   //add online users
