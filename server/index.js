@@ -36,18 +36,13 @@ mongoose
 //socket
 const io = new Server(expressServer, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "https://your-frontend-domain.com" // Add your actual frontend domain
-    ],
+    origin: ["https://live-chat-sepia.vercel.app"],
     methods: ["GET", "POST"],
     credentials: true,
-    allowEIO3: true // This helps with some deployment issues
+    allowEIO3: true,
   },
-  // Additional options that help with deployment
-  transports: ['websocket', 'polling'],
-  allowEIO3: true
+  transports: ["websocket", "polling"],
+  allowEIO3: true,
 });
 let onlineUsers = [];
 
