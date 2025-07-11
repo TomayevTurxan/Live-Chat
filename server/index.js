@@ -36,7 +36,7 @@ mongoose
 //socket
 const io = new Server(expressServer, {
   cors: {
-    origin: "https://live-chat-sepia.vercel.app",
+    origin: ["*"],  
     methods: ["GET", "POST"],
     credentials: true,
   },
