@@ -25,7 +25,7 @@ export const UserProvider = ({ children }) => {
 
   //configuration socket
   useEffect(() => {
-    const newSocket = io("http://localhost:5000");
+    const newSocket = io("https://live-chat-back-end.onrender.com");
     setSocket(newSocket);
 
     return () => {
