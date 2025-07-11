@@ -36,10 +36,18 @@ mongoose
 //socket
 const io = new Server(expressServer, {
   cors: {
-    origin: ["*"],  
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://your-frontend-domain.com" // Add your actual frontend domain
+    ],
     methods: ["GET", "POST"],
     credentials: true,
+    allowEIO3: true // This helps with some deployment issues
   },
+  // Additional options that help with deployment
+  transports: ['websocket', 'polling'],
+  allowEIO3: true
 });
 let onlineUsers = [];
 
