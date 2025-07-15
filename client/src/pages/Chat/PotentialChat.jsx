@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useState, useContext } from "react";
 import {
   Avatar,
   Box,
@@ -62,7 +62,14 @@ const PotentialChats = () => {
 
   return (
     <Paper elevation={1} sx={{ m: 2 }}>
-      <List sx={{ width: "100%", bgcolor: "background.paper" }}>
+      <List
+        sx={{
+          width: "100%",
+          bgcolor: "background.paper",
+          maxHeight: 400,
+          overflow: "auto",
+        }}
+      >
         {potentialChatsUser.map((userItem, index) => (
           <ListItem
             key={userItem._id || index}

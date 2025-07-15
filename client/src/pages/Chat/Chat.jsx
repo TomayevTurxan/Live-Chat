@@ -68,7 +68,6 @@ const Chat = () => {
     );
   }
 
-  // --- MOBILE VERSION ---
   return (
     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       {!showChatView ? (
@@ -86,7 +85,6 @@ const Chat = () => {
         )
       )}
 
-      {/* Drawer for Mobile */}
       <Drawer
         variant="temporary"
         anchor="left"
@@ -105,7 +103,6 @@ const Chat = () => {
         />
       </Drawer>
 
-      {/* Outlet full screen in mobile */}
       {showUserDetail && (
         <Box
           sx={{
@@ -115,7 +112,7 @@ const Chat = () => {
             width: "100vw",
             height: "100vh",
             backgroundColor: "background.default",
-            zIndex: 1300, // higher than Drawer
+            zIndex: 1300,
             overflowY: "auto",
           }}
         >

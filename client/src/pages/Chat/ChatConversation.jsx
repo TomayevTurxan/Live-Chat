@@ -43,13 +43,14 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const { userInfo, logout } = useUser();
   const { socket } = useContext(UserContext);
   const recipientId = currentChat?.members?.find((id) => id !== userInfo?._id);
+  console.log('currentChat',currentChat)
   const { data: recipientUser } = useRecipientUser(recipientId);
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const open = Boolean(anchorEl);
 
   const handleAvatarClick = () => {
     if (recipientUser?._id) {
-      navigate(`/chat/user/${recipientUser._id}`);
+      navigate(`/chat/user/${recipientUser?._id}`);
     }
   };
 
@@ -95,6 +96,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
     });
   };
 
+  console.log("currentChat", currentChat);
   if (!currentChat || currentChat.length == 0) {
     return <WelcomeBox />;
   }
@@ -120,9 +122,21 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
           minHeight: { xs: "60px", md: "80px" },
           backgroundColor: "background.paper",
           boxShadow: 1,
+          position: { xs: "fixed", md: "static" },
+          top: { xs: 0, md: "auto" },
+          width: "100%",
+          zIndex: { xs: 10, md: "auto" },
         }}
       >
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box
+          sx={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+          }}
+          gap={1}
+          onClick={handleAvatarClick}
+        >
           {isMobile && (
             <IconButton onClick={onBackToChats} sx={{ mr: 1 }} color="primary">
               <ArrowBack />
@@ -130,13 +144,12 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
           )}
 
           <Avatar
-            onClick={handleAvatarClick}
-            src={recipientUser.avatar}
+            src={recipientUser?.avatar}
             sx={{
               mr: { xs: 1, md: 2 },
             }}
           >
-            {recipientUser.name?.charAt(0)}
+            {recipientUser?.name?.charAt(0)}
           </Avatar>
 
           <Box>
@@ -147,7 +160,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
                 fontWeight: 600,
               }}
             >
-              {recipientUser.name}
+              {recipientUser?.name}
             </Typography>
             <Box display="flex" alignItems="center" gap={1}>
               <ChipOnline recipientUser={recipientUser} />

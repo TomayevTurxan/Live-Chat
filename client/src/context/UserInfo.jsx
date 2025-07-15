@@ -23,14 +23,14 @@ export const UserProvider = ({ children }) => {
     }
   }, [userInfo]);
 
+
   //configuration socket
-  
   useEffect(() => {
-    const newSocket = io("https://live-chat-back-end.onrender.com", {
-      transports: ['websocket', 'polling'],
+    const newSocket = io(import.meta.env.VITE_SOCKET_PORT, {
+      transports: ["websocket", "polling"],
       upgrade: true,
       rememberUpgrade: true,
-      forceNew: true
+      forceNew: true,
     });
     setSocket(newSocket);
 

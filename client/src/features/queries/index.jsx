@@ -19,7 +19,7 @@ export const keys = {
   get recipientUser() {
     return [...this.base, "recipientUser"];
   },
-  getRecepientUser(recipientId) {
+  getRecipientUser(recipientId) {
     return [...this.recipientUser, recipientId];
   },
   get allUsers() {
@@ -58,7 +58,7 @@ export function useUserChats(userId) {
 
 export function useRecipientUser(recipientId) {
   return useQuery({
-    queryKey: keys.getRecepientUser(recipientId),
+    queryKey: keys.getRecipientUser(recipientId),
     queryFn: () => getRecipientUserApi(recipientId),
     enabled: !!recipientId,
   });

@@ -24,7 +24,6 @@ const UserDetail = () => {
   const handleBack = () => navigate("/chat");
   const handleStartChat = () => navigate("/chat");
   const blockUser = useBlockUser();
-  console.log("userInfo", userInfo);
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -98,13 +97,13 @@ const UserDetail = () => {
             }}
           >
             <Avatar
-              src={recipientUser.avatar}
+              src={recipientUser?.avatar}
               sx={{ width: 150, height: 150, fontSize: 48 }}
             >
-              {recipientUser.name?.charAt(0)}
+              {recipientUser?.name?.charAt(0)}
             </Avatar>
 
-            <Typography variant="h6">{recipientUser.name}</Typography>
+            <Typography variant="h6">{recipientUser?.name}</Typography>
 
             <ChipOnline recipientUser={recipientUser} />
 
@@ -131,12 +130,12 @@ const UserDetail = () => {
                   sx={{ display: "flex", alignItems: "center" }}
                 >
                   <Person sx={{ mr: 1 }} />
-                  {recipientUser.name}
+                  {recipientUser?.name}
                 </Typography>
               </Box>
             </Grid>
 
-            {recipientUser.email && (
+            {recipientUser?.email && (
               <Grid item size={12}>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
@@ -147,13 +146,13 @@ const UserDetail = () => {
                     sx={{ display: "flex", alignItems: "center" }}
                   >
                     <Email sx={{ mr: 1 }} />
-                    {recipientUser.email}
+                    {recipientUser?.email}
                   </Typography>
                 </Box>
               </Grid>
             )}
 
-            {recipientUser.createdAt && (
+            {recipientUser?.createdAt && (
               <Grid size={12}>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
@@ -170,12 +169,12 @@ const UserDetail = () => {
               </Grid>
             )}
 
-            {recipientUser.bio && (
+            {recipientUser?.bio && (
               <Grid item size={12}>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   Bio
                 </Typography>
-                <Typography variant="body1">{recipientUser.bio}</Typography>
+                <Typography variant="body1">{recipientUser?.bio}</Typography>
               </Grid>
             )}
             <Button
