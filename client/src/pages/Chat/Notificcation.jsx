@@ -19,10 +19,8 @@ const Notification = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { allUsers, notifications, setNotifications } = useChatData();
   const open = Boolean(anchorEl);
-
   const unread = notifications?.filter((n) => !n.isRead) || [];
   const read = notifications?.filter((n) => n.isRead) || [];
-
   const all = [...unread, ...read].map((n) => {
     const sender = allUsers?.find((u) => u._id === n.senderId);
     return {

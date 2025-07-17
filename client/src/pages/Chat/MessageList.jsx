@@ -31,9 +31,9 @@ const MessagesList = ({ messages, userInfo }) => {
         p: 1,
       }}
     >
-      {messages?.map((msg) => (
+      {messages?.map((msg, idx) => (
         <MessageBubble
-          key={msg._id}
+          key={idx}
           message={msg}
           isMyMessage={isMyMessage(msg)}
           userInfo={userInfo}

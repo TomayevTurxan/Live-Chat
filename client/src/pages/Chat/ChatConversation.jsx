@@ -43,7 +43,6 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const { userInfo, logout } = useUser();
   const { socket } = useContext(UserContext);
   const recipientId = currentChat?.members?.find((id) => id !== userInfo?._id);
-  console.log('currentChat',currentChat)
   const { data: recipientUser } = useRecipientUser(recipientId);
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const open = Boolean(anchorEl);
@@ -81,6 +80,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
       chatId: currentChat._id,
       senderId: userInfo._id,
       text: message.trim(),
+      isRead: false,
     };
     sendMessage.mutate(messageData, {
       onSuccess: () => {
@@ -96,7 +96,6 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
     });
   };
 
-  console.log("currentChat", currentChat);
   if (!currentChat || currentChat.length == 0) {
     return <WelcomeBox />;
   }

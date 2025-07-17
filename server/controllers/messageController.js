@@ -2,12 +2,13 @@ const messageModel = require("../models/messageModel");
 
 //creatre message
 const createMessage = async (req, res) => {
-  const { chatId, senderId, text } = req.body;
+  const { chatId, senderId, text, isRead } = req.body;
   try {
     const newMessage = new messageModel({
       chatId,
       senderId,
       text,
+      isRead,
     });
 
     const response = await newMessage.save();
@@ -27,7 +28,5 @@ const getMessages = async (req, res) => {
     res.status(500).json(error);
   }
 };
-
-
 
 module.exports = { createMessage, getMessages };

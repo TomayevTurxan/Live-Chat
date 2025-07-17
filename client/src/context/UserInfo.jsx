@@ -23,7 +23,6 @@ export const UserProvider = ({ children }) => {
     }
   }, [userInfo]);
 
-
   //configuration socket
   useEffect(() => {
     const newSocket = io(import.meta.env.VITE_SOCKET_PORT, {

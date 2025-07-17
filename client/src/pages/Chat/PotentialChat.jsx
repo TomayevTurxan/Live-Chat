@@ -92,8 +92,8 @@ const PotentialChats = () => {
                   transition: "border 0.3s ease",
                 }}
               >
-                {userItem.name ? (
-                  userItem.name.charAt(0).toUpperCase()
+                {userItem?.name ? (
+                  userItem?.name.charAt(0).toUpperCase()
                 ) : (
                   <ChatIcon />
                 )}
@@ -113,14 +113,14 @@ const PotentialChats = () => {
                     fontWeight="medium"
                     component="span"
                   >
-                    {userItem.name || "Unknown User"}
+                    {userItem?.name || "Unknown User"}
                   </Typography>
                   <Typography
                     variant="caption"
                     color="text.secondary"
                     component="span"
                   >
-                    {new Date(userItem.createdAt).toLocaleDateString()}
+                    {new Date(userItem?.createdAt).toLocaleDateString()}
                   </Typography>
                 </Box>
               }
@@ -132,7 +132,7 @@ const PotentialChats = () => {
                     component="span"
                     sx={{ display: "block" }}
                   >
-                    {userItem.email || "No email provided"}
+                    {userItem?.email || "No email provided"}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -141,7 +141,7 @@ const PotentialChats = () => {
                     sx={{ display: "block" }}
                   >
                     Joined{" "}
-                    {new Date(userItem.createdAt).toLocaleDateString("en-US", {
+                    {new Date(userItem?.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
@@ -151,7 +151,7 @@ const PotentialChats = () => {
               }
             />
             <Box sx={{ display: "flex", alignItems: "center" }}>
-              {loadingId === userItem._id ? (
+              {loadingId === userItem?._id ? (
                 <CircularProgress size={24} />
               ) : (
                 <ChatIcon

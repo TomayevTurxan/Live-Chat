@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 const userRoute = require("./routes/userRoute");
 const chatRoute = require("./routes/chatRoute");
 const messageRoute = require("./routes/messageRoute");
+const messageModel = require("./models/messageModel"); // doğru path ilə
 
 const app = express();
 require("dotenv").config();
@@ -69,6 +70,27 @@ io.on("connection", (socket) => {
         isRead: false,
         date: new Date(),
       });
+    }
+  });
+
+  socket.on("markAsRead", async ({ chatId, userId }) => {
+    try {
+      const result = await messageModel.updateMany(
+        {
+          chatId,
+          senderId: { $ne: userId },
+          isRead: false,
+        },
+        { $set: { isRead: true } }
+      );
+
+      const senderUsers = onlineUsers.filter((u) => u.userId !== userId);
+
+      senderUsers.forEach((user) => {
+        io.to(user.socketId).emit("getMessagesRead", { chatId });
+      });
+    } catch (error) {
+      console.error("markAsRead error:", error);
     }
   });
 

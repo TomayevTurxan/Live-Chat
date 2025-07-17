@@ -1,4 +1,6 @@
 import { Box, Typography, Avatar } from "@mui/material";
+import DoneIcon from "@mui/icons-material/Done";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
 
 const MessageBubble = ({ message, isMyMessage, userInfo, formatTime }) => {
   return (
@@ -34,6 +36,7 @@ const MessageBubble = ({ message, isMyMessage, userInfo, formatTime }) => {
           borderBottomRightRadius: isMyMessage ? 4 : 16,
           borderBottomLeftRadius: isMyMessage ? 16 : 4,
           boxShadow: 1,
+          position: "relative",
         }}
       >
         <Typography
@@ -58,6 +61,25 @@ const MessageBubble = ({ message, isMyMessage, userInfo, formatTime }) => {
         >
           {formatTime(message.createdAt)}
         </Typography>
+
+        {isMyMessage && (
+          <Box
+            sx={{
+              position: "absolute",
+              bottom: 4,
+              right: 4,
+              display: "flex",
+              alignItems: "center",
+              gap: 0.3,
+            }}
+          >
+            {message.isRead ? (
+              <DoneAllIcon sx={{ fontSize: 18, color: "#4fc3f7" }} />
+            ) : (
+              <DoneIcon sx={{ fontSize: 18, color: "grey" }} />
+            )}
+          </Box>
+        )}
       </Box>
 
       {isMyMessage && (
