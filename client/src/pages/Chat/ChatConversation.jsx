@@ -29,7 +29,7 @@ import { useRecipientUser } from "../../features/queries";
 import WelcomeBox from "../../components/WelcomeBox";
 import InputEmojiComponent from "../../components/InputEmokji";
 import ChipOnline from "../../components/Chip";
-import Notification from "./Notificcation";
+import Notification from "./Notification";
 import DarkMode from "../../components/DarkMode";
 
 const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
