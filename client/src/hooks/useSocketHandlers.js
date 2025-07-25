@@ -74,6 +74,17 @@ const useSocketHandlers = (
   useEffect(() => {
     if (!socket || !currentChat || !userInfo) return;
 
+    socket.emit("markAsRead", {
+      chatId: currentChat._id,
+      userId: userInfo._id,
+    });
+
+    setMessages((prevMessages) =>
+      prevMessages.map((msg) =>
+        msg.chatId === currentChat._id ? { ...msg, isRead: true } : msg
+      )
+    );
+
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         socket.emit("markAsRead", {
@@ -97,7 +108,7 @@ const useSocketHandlers = (
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [socket, currentChat, userInfo]);
+  }, [currentChat?._id]);
 };
 
 export default useSocketHandlers;

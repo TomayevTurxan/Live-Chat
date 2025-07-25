@@ -5,6 +5,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import Chat from "../pages/Chat/Chat";
 import UserDetail from "../pages/Chat/UserDetail";
+import VideoCall from "../pages/Chat/VideoCall";
 
 const routes = [
   {
@@ -42,6 +43,10 @@ const routes = [
         element: <UserDetail />,
       },
     ],
+  },
+  {
+    path: "/videoCall",
+    element: <VideoCall />,
   },
 ];
 

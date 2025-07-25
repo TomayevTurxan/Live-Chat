@@ -37,7 +37,7 @@ mongoose
 //socket
 const io = new Server(expressServer, {
   cors: {
-    origin: [process.env.FRONT_URL],
+    origin: ["*"],
     methods: ["GET", "POST"],
     credentials: true,
     allowEIO3: true,
@@ -48,6 +48,8 @@ const io = new Server(expressServer, {
 let onlineUsers = [];
 
 io.on("connection", (socket) => {
+  socket.emit("me", socket.id);
+
   socket.on("addNewUser", (userId) => {
     !onlineUsers.some((user) => user.userId === userId) &&
       onlineUsers.push({
@@ -96,7 +98,22 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     onlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id);
-
     io.emit("getOnlineUsers", onlineUsers);
+
+    socket.broadcast.emit("callEnded");
   });
+
+  socket.on("callUser", (data) => {
+    io.to(data.userToCall).emit("callUser", {
+      signal: data.signalData,
+      from: data.from,
+      name: data.name,
+    });
+  });
+
+  socket.on("answerCall", (data) => {
+    io.to(data.to).emit("callAccepted", data.signal);
+  });
+
+  socket.broadcast.emit("callEnded");
 });

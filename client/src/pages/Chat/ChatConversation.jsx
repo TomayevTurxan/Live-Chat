@@ -1,4 +1,4 @@
-import { useState, useRef, useContext } from "react";
+import React, { useState, useRef, useContext } from "react";
 import {
   Box,
   Avatar,
@@ -31,6 +31,8 @@ import InputEmojiComponent from "../../components/InputEmokji";
 import ChipOnline from "../../components/Chip";
 import Notification from "./Notification";
 import DarkMode from "../../components/DarkMode";
+import DuoIcon from "@mui/icons-material/Duo";
+import VideoCall from "./VideoCall";
 
 const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const navigate = useNavigate();
@@ -38,6 +40,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const theme = useTheme();
   const [message, setMessage] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
+  const [videoCallOpen, setVideoCallOpen] = useState(false);
   const messageInputRef = useRef(null);
   const sendMessage = usePostMessage();
   const { userInfo, logout } = useUser();
@@ -72,6 +75,14 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
 
     logout();
     navigate("/login");
+  };
+
+  const handleVideoCall = () => {
+    setVideoCallOpen(true);
+  };
+
+  const handleCloseVideoCall = () => {
+    setVideoCallOpen(false);
   };
 
   const handleSendMessage = () => {
@@ -173,13 +184,18 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
               <MenuIcon />
             </IconButton>
           )}
+          <IconButton
+            onClick={handleVideoCall}
+            color="inherit"
+          >
+            <DuoIcon />
+          </IconButton>
           <Notification />
           <DarkMode />
           <IconButton
             color="inherit"
             onClick={handleMenuClick}
             aria-controls={open ? "account-menu" : undefined}
-            aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}
           >
             <MoreVert />
@@ -247,6 +263,13 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
           {sendMessage.isPending ? "Sending..." : "Send"}
         </Button>
       </Box>
+
+      {/* Video Call Modal */}
+      <VideoCall
+        open={videoCallOpen}
+        onClose={handleCloseVideoCall}
+        recipientUser={recipientUser}
+      />
     </Box>
   );
 };
