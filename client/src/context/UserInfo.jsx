@@ -26,7 +26,7 @@ export const UserProvider = ({ children }) => {
   //configuration socket
   useEffect(() => {
     if (userInfo?._id) {
-      const newSocket = io("http://localhost:3000", {
+      const newSocket = io(import.meta.VITE_SOCKET_PORT, {
         transports: ["websocket", "polling"],
         upgrade: true,
         rememberUpgrade: true,
