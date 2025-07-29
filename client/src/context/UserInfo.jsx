@@ -14,24 +14,7 @@ export const UserProvider = ({ children }) => {
   });
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState(null);
-  //configuration socket
-  useEffect(() => {
-    if (userInfo?._id) {
-      const newSocket = io(import.meta.env.VITE_SOCKET_PORT, {
-        transports: ["websocket", "polling"],
-        upgrade: true,
-        rememberUpgrade: true,
-        forceNew: true,
-      });
-      if (newSocket) {
-        setSocket(newSocket);
-      }
 
-      return () => {
-        newSocket.disconnect();
-      };
-    }
-  }, []);
   useEffect(() => {
     if (userInfo) {
       localStorage.setItem("userInfo", JSON.stringify(userInfo));
@@ -39,6 +22,24 @@ export const UserProvider = ({ children }) => {
       localStorage.removeItem("userInfo");
     }
   }, [userInfo]);
+
+  //configuration socket
+  useEffect(() => {
+    const newSocket = io(import.meta.env.VITE_SOCKET_PORT, {
+      transports: ["websocket", "polling"],
+      upgrade: true,
+      rememberUpgrade: true,
+      forceNew: true,
+    });
+    if (newSocket) {
+      setSocket(newSocket);
+    }
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
   //add online users
   useEffect(() => {
     if (socket === null) return;
