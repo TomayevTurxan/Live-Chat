@@ -104,11 +104,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("callUser", (data) => {
-    io.to(data.userToCall).emit("callUser", {
-      signal: data.signalData,
-      from: data.from,
-      name: data.name,
-    });
+    const user = onlineUsers.find((u) => u.userId === data.userToCall);
+    if (user) {
+      io.to(user.socketId).emit("callUser", {
+        signal: data.signalData,
+        from: data.from,
+        name: data.name,
+      });
+    }
   });
 
   socket.on("answerCall", (data) => {

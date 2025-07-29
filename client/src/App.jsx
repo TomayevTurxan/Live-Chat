@@ -8,6 +8,7 @@ import { UserProvider } from "./context/UserInfo";
 import { PotentialChatProvider } from "./context/PotentialChatContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ChatDataProvider } from "./context/ChatContext";
+import { CallProvider } from "./context/CallContext";
 
 const queryClient = new QueryClient();
 
@@ -24,10 +25,12 @@ function App() {
         <UserProvider>
           <ChatDataProvider>
             <PotentialChatProvider>
-              <Providers />
+              <CallProvider>
+                <Providers />
+              </CallProvider>
             </PotentialChatProvider>
           </ChatDataProvider>
-        </UserProvider>
+        </UserProvider> 
       </ThemeProvider>
     </QueryClientProvider>
   );

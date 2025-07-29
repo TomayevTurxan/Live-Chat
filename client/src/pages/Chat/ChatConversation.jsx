@@ -33,6 +33,7 @@ import Notification from "./Notification";
 import DarkMode from "../../components/DarkMode";
 import DuoIcon from "@mui/icons-material/Duo";
 import VideoCall from "./VideoCall";
+import { useEffect } from "react";
 
 const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const navigate = useNavigate();
@@ -46,6 +47,8 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const { userInfo, logout } = useUser();
   const { socket } = useContext(UserContext);
   const recipientId = currentChat?.members?.find((id) => id !== userInfo?._id);
+  const [incomingCallData, setIncomingCallData] = useState(null);
+
   const { data: recipientUser } = useRecipientUser(recipientId);
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const open = Boolean(anchorEl);
@@ -106,6 +109,21 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
       },
     });
   };
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleIncomingCall = (data) => {
+      console.log("Zəng gəldi:", data);
+      setIncomingCallData(data);
+      setVideoCallOpen(true);
+    };
+
+    socket.on("callUser", handleIncomingCall);
+
+    return () => {
+      socket.off("callUser", handleIncomingCall);
+    };
+  }, [socket]);
 
   if (!currentChat || currentChat.length == 0) {
     return <WelcomeBox />;
@@ -184,10 +202,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
               <MenuIcon />
             </IconButton>
           )}
-          <IconButton
-            onClick={handleVideoCall}
-            color="inherit"
-          >
+          <IconButton onClick={handleVideoCall} color="inherit">
             <DuoIcon />
           </IconButton>
           <Notification />
@@ -264,11 +279,12 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
         </Button>
       </Box>
 
-      {/* Video Call Modal */}
       <VideoCall
         open={videoCallOpen}
         onClose={handleCloseVideoCall}
         recipientUser={recipientUser}
+        incomingCallData={incomingCallData}
+        setIncomingCallData={setIncomingCallData}
       />
     </Box>
   );
