@@ -28,11 +28,6 @@ const VideoCall = ({
   const connectionRef = useRef();
   const [isCalling, setIsCalling] = useState(false);
   const localStreamRef = useRef(null);
-  const [connectionError, setConnectionError] = useState("");
-  const retryTimeoutRef = useRef(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const MAX_RETRIES = 3;
-
   const {
     receivingCall,
     setReceivingCall,
@@ -43,32 +38,6 @@ const VideoCall = ({
     callAccepted,
     setCallAccepted,
   } = useContext(CallContext);
-
-  // Production-ready STUN/TURN configuration
-  const iceServers = [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-    { urls: "stun:stun2.l.google.com:19302" },
-    { urls: "stun:stun3.l.google.com:19302" },
-    { urls: "stun:stun4.l.google.com:19302" },
-    { urls: "stun:global.stun.twilio.com:3478" },
-    // Add free TURN servers for better connectivity
-    {
-      urls: "turn:openrelay.metered.ca:80",
-      username: "openrelayproject",
-      credential: "openrelayproject",
-    },
-    {
-      urls: "turn:openrelay.metered.ca:443",
-      username: "openrelayproject",
-      credential: "openrelayproject",
-    },
-    {
-      urls: "turn:openrelay.metered.ca:443?transport=tcp",
-      username: "openrelayproject",
-      credential: "openrelayproject",
-    },
-  ];
 
   useEffect(() => {
     if (!socket) {
@@ -86,7 +55,7 @@ const VideoCall = ({
       setName(data.name);
       setCallerSignal(data.signal);
     });
-
+    
     socket.on("callAccepted", () => {
       setCallAccepted(true);
     });
@@ -100,16 +69,10 @@ const VideoCall = ({
       socket.off("callUser");
       socket.off("callEnded");
       socket.off("callAccepted");
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-      }
     };
   }, [socket]);
 
   const cleanupCall = () => {
-    console.log("Cleanup call triggered");
-
-    // Reset UI states
     setIsCalling(false);
     setReceivingCall(false);
     setCallAccepted(false);
@@ -117,36 +80,17 @@ const VideoCall = ({
     setCallerSignal(null);
     setName("");
     setIncomingCallData(null);
-    setConnectionError("");
-    setRetryCount(0);
 
-    // Clear retry timeout
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-      retryTimeoutRef.current = null;
-    }
-
-    // Destroy peer connection
     if (connectionRef.current) {
-      try {
-        connectionRef.current.destroy();
-      } catch (error) {
-        console.warn("Error destroying peer connection:", error);
-      }
+      connectionRef.current.destroy();
       connectionRef.current = null;
     }
 
-    // Stop media streams
     if (localStreamRef.current) {
-      try {
-        localStreamRef.current.getTracks().forEach((track) => track.stop());
-      } catch (error) {
-        console.warn("Error stopping tracks:", error);
-      }
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
       localStreamRef.current = null;
     }
 
-    // Clear video elements
     if (userVideo.current) {
       userVideo.current.srcObject = null;
     }
@@ -154,118 +98,11 @@ const VideoCall = ({
       myVideo.current.srcObject = null;
     }
 
-    // Remove socket listeners
     socket.off("callAccepted");
   };
 
-  const createPeerConnection = (isInitiator, stream) => {
-    const peer = new Peer({
-      initiator: isInitiator,
-      trickle: false,
-      stream: stream,
-      config: {
-        iceServers: iceServers,
-        iceCandidatePoolSize: 10,
-      },
-      // Add additional options for better connectivity
-      reconnectTimer: 3000,
-      iceTransportPolicy: "all",
-      bundlePolicy: "max-bundle",
-      rtcpMuxPolicy: "require",
-    });
-
-    // Enhanced error handling and connection monitoring
-    peer.on("error", (err) => {
-      console.error("Peer error:", err);
-
-      if (err.message && err.message.includes("Connection failed")) {
-        handleConnectionError();
-      } else {
-        setConnectionError(
-          `Connection error: ${err.message || "Unknown error"}`
-        );
-        if (isInitiator) {
-          setIsCalling(false);
-        } else {
-          setCallAccepted(false);
-        }
-      }
-    });
-
-    peer.on("connect", () => {
-      console.log("Peer connected successfully");
-      setConnectionError("");
-      setRetryCount(0);
-    });
-
-    peer.on("close", () => {
-      console.log("Peer connection closed");
-      cleanupCall();
-    });
-
-    // Monitor connection state
-    if (peer._pc) {
-      peer._pc.oniceconnectionstatechange = () => {
-        console.log("ICE connection state:", peer._pc.iceConnectionState);
-
-        if (
-          peer._pc.iceConnectionState === "failed" ||
-          peer._pc.iceConnectionState === "disconnected"
-        ) {
-          handleConnectionError();
-        }
-      };
-
-      peer._pc.onconnectionstatechange = () => {
-        console.log("Connection state:", peer._pc.connectionState);
-
-        if (peer._pc.connectionState === "failed") {
-          handleConnectionError();
-        }
-      };
-    }
-
-    return peer;
-  };
-
-  const handleConnectionError = () => {
-    if (retryCount < MAX_RETRIES) {
-      setConnectionError(
-        `Connection failed. Retrying... (${retryCount + 1}/${MAX_RETRIES})`
-      );
-      setRetryCount((prev) => prev + 1);
-
-      retryTimeoutRef.current = setTimeout(() => {
-        if (isCalling && recipientUser?._id) {
-          console.log("Retrying call...");
-          callUser(recipientUser._id);
-        }
-      }, 2000);
-    } else {
-      setConnectionError(
-        "Connection failed after multiple attempts. Please check your network and try again."
-      );
-      setIsCalling(false);
-      setCallAccepted(false);
-    }
-  };
-
   const callUser = (id) => {
-    console.log("=== CALLING USER DEBUG ===");
-    console.log("Target ID:", id);
-    console.log("Current callAccepted:", callAccepted);
-    console.log("Current isCalling:", isCalling);
-    console.log("Current receivingCall:", receivingCall);
-    console.log("========================");
-
-    // CRITICAL: Reset ALL states before starting new call
-    setCallAccepted(false);
-    setReceivingCall(false);
-    setCaller("");
-    setCallerSignal(null);
-    setConnectionError("");
-    setRetryCount(0);
-
+    console.log('id', id);
     setIsCalling(true);
 
     getCameraStream()
@@ -275,7 +112,11 @@ const VideoCall = ({
           myVideo.current.srcObject = currentStream;
         }
 
-        const peer = createPeerConnection(true, currentStream);
+        const peer = new Peer({
+          initiator: true,
+          trickle: false,
+          stream: currentStream,
+        });
 
         peer.on("signal", (data) => {
           socket.emit("callUser", {
@@ -296,16 +137,10 @@ const VideoCall = ({
           }
         });
 
-        socket.off("callAccepted");
         socket.on("callAccepted", (signal) => {
           console.log("Call accepted signal received");
           setCallAccepted(true);
-          try {
-            peer.signal(signal);
-          } catch (error) {
-            console.error("Error signaling peer:", error);
-            handleConnectionError();
-          }
+          peer.signal(signal);
         });
 
         connectionRef.current = peer;
@@ -313,17 +148,10 @@ const VideoCall = ({
       .catch((error) => {
         console.error("Error getting camera stream:", error);
         setIsCalling(false);
-        setCallAccepted(false); // Bu əlavə olundu
-        setConnectionError(
-          "Could not access camera/microphone. Please check permissions."
-        );
       });
   };
 
   const answerCall = () => {
-    setConnectionError("");
-    setCallAccepted(true);
-
     getCameraStream()
       .then((currentStream) => {
         localStreamRef.current = currentStream;
@@ -331,13 +159,19 @@ const VideoCall = ({
           myVideo.current.srcObject = currentStream;
         }
 
-        const peer = createPeerConnection(false, currentStream);
+        const peer = new Peer({
+          initiator: false,
+          trickle: false,
+          stream: currentStream,
+        });
 
         peer.on("signal", (data) => {
           setCallAccepted(true);
           socket.emit("answerCall", { signal: data, to: caller });
         });
-
+        socket.on("callAccepted", (signal) => {
+          peer.signal(signal);
+        });
         peer.on("stream", (remoteStream) => {
           console.log("Remote stream received in answerCall");
           if (
@@ -348,24 +182,12 @@ const VideoCall = ({
           }
         });
 
-        try {
-          peer.signal(callerSignal);
-        } catch (error) {
-          console.error("Error signaling caller:", error);
-          setConnectionError(
-            "Failed to establish connection. Please try again."
-          );
-          setCallAccepted(false);
-        }
-
+        peer.signal(callerSignal);
         connectionRef.current = peer;
       })
       .catch((error) => {
         console.error("Error getting camera stream:", error);
         setCallAccepted(false);
-        setConnectionError(
-          "Could not access camera/microphone. Please check permissions."
-        );
       });
   };
 
@@ -378,15 +200,8 @@ const VideoCall = ({
       return navigator.mediaDevices.getUserMedia({
         video: {
           deviceId: defaultCameraId ? { exact: defaultCameraId } : undefined,
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 },
-          frameRate: { ideal: 30, max: 60 },
         },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
+        audio: true,
       });
     } catch (error) {
       console.error("Error accessing camera:", error);
@@ -395,60 +210,10 @@ const VideoCall = ({
   };
 
   const leaveCall = () => {
-    console.log("Leaving call - resetting all states");
-
-    // First, emit the callEnded event
-    socket.emit("callEnded");
-
-    // Reset all call-related states immediately
     setIncomingCallData(null);
     setIsCalling(false);
-    setCallAccepted(false);
-    setReceivingCall(false);
-    setCaller("");
-    setCallerSignal(null);
-    setName("");
-    setConnectionError("");
-    setRetryCount(0);
-
-    // Clear timeout if exists
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-      retryTimeoutRef.current = null;
-    }
-
-    // Clean up peer connection
-    if (connectionRef.current) {
-      try {
-        connectionRef.current.destroy();
-      } catch (error) {
-        console.warn("Error destroying peer connection:", error);
-      }
-      connectionRef.current = null;
-    }
-
-    // Stop local stream
-    if (localStreamRef.current) {
-      try {
-        localStreamRef.current.getTracks().forEach((track) => track.stop());
-      } catch (error) {
-        console.warn("Error stopping tracks:", error);
-      }
-      localStreamRef.current = null;
-    }
-
-    // Clear video sources
-    if (userVideo.current) {
-      userVideo.current.srcObject = null;
-    }
-    if (myVideo.current) {
-      myVideo.current.srcObject = null;
-    }
-
-    // Remove socket listeners
-    socket.off("callAccepted");
-
-    console.log("Call cleanup completed");
+    cleanupCall();
+    socket.emit("callEnded");
   };
 
   useEffect(() => {
@@ -467,9 +232,8 @@ const VideoCall = ({
       cleanupCall();
     }
   }, [open]);
-
   console.log("userVideo.current", userVideo);
-  console.log("callAccepted", callAccepted);
+  console.log("callAcepted", callAccepted);
   console.log("isCalling", isCalling);
 
   return (
@@ -481,7 +245,7 @@ const VideoCall = ({
       }}
       maxWidth="md"
       fullWidth
-      PaperProps={{
+      props={{
         sx: {
           bgcolor: "#121212",
           color: "#fff",
@@ -523,6 +287,7 @@ const VideoCall = ({
                 height: "100%",
                 objectFit: "cover",
                 borderRadius: "10px",
+                // display: callAccepted ? "block" : "none",
               }}
             />
 
@@ -535,37 +300,19 @@ const VideoCall = ({
                   right: 0,
                   bottom: 0,
                   display: "flex",
-                  flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "center",
                   color: "#666",
                   zIndex: 1,
-                  textAlign: "center",
-                  px: 2,
                 }}
               >
-                <Typography variant="h6" sx={{ mb: 2 }}>
+                <Typography variant="h6">
                   {isCalling
                     ? "Calling..."
                     : receivingCall
                     ? "Incoming call..."
                     : "No active call"}
                 </Typography>
-
-                {connectionError && (
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#ff6b6b",
-                      backgroundColor: "rgba(255,107,107,0.1)",
-                      padding: "8px 16px",
-                      borderRadius: 1,
-                      maxWidth: "400px",
-                    }}
-                  >
-                    {connectionError}
-                  </Typography>
-                )}
               </Box>
             )}
 
@@ -615,7 +362,7 @@ const VideoCall = ({
                   onClick={() => {
                     callUser(recipientUser._id);
                   }}
-                  disabled={!recipientUser?._id || !!connectionError}
+                  disabled={!recipientUser?._id}
                 >
                   <PhoneIcon fontSize="large" />
                 </IconButton>
@@ -653,7 +400,6 @@ const VideoCall = ({
                   setCaller("");
                   setCallerSignal(null);
                   setName("");
-                  setIncomingCallData(null);
                 }}
               >
                 Decline
