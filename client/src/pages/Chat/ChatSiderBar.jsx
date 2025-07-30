@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
   Box,
   Typography,
@@ -8,16 +8,22 @@ import {
   Modal,
   Tooltip,
   Paper,
+  Button,
 } from "@mui/material";
-import { PersonAdd, Close } from "@mui/icons-material";
+import { PersonAdd, Close, Logout } from "@mui/icons-material";
 import UserChat from "./UserChat";
 import PotentialChats from "./PotentialChat";
 import { useChatData, useUser } from "../../context/contexts";
+import UserContext from "../../context/UserInfo";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 const ChatSidebar = ({ onChatSelect, selectedChat }) => {
-  const { userInfo } = useUser();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { userInfo, logout } = useUser();
+  const { socket } = useContext(UserContext);
   const { userChats } = useChatData();
-
   const [showPotentialChats, setShowPotentialChats] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -31,6 +37,16 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
+  };
+  const handleLogout = () => {
+    if (socket) {
+      socket.disconnect();
+    }
+
+    queryClient.clear();
+
+    logout();
+    navigate("/login");
   };
 
   const filteredChats =
@@ -132,21 +148,34 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
         p={2}
         borderTop="1px solid"
         borderColor="divider"
-        sx={{ backgroundColor: "background.paper" }}
+        sx={{
+          backgroundColor: "background.paper",
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
       >
-        <Box display="flex" alignItems="center" gap={1}>
-          <Box
-            sx={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              backgroundColor: "success.main",
-            }}
-          />
-          <Typography variant="caption" color="text.secondary">
-            Online
-          </Typography>
-        </Box>
+        {/* Online Status */}
+        <Button
+          onClick={handleLogout}
+          variant="outlined"
+          color="error"
+          fullWidth
+          startIcon={<Logout />}
+          sx={{
+            borderRadius: 2,
+            py: 1,
+            textTransform: "none",
+            fontWeight: 500,
+            "&:hover": {
+              backgroundColor: "error.main",
+              color: "white",
+              borderColor: "error.main",
+            },
+          }}
+        >
+          Log out
+        </Button>
       </Box>
 
       <Modal

@@ -40,44 +40,21 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const queryClient = useQueryClient();
   const theme = useTheme();
   const [message, setMessage] = useState("");
-  const [anchorEl, setAnchorEl] = useState(null);
   const [videoCallOpen, setVideoCallOpen] = useState(false);
   const messageInputRef = useRef(null);
   const sendMessage = usePostMessage();
-  const { userInfo, logout } = useUser();
+  const { userInfo } = useUser();
   const { socket } = useContext(UserContext);
   const recipientId = currentChat?.members?.find((id) => id !== userInfo?._id);
   const [incomingCallData, setIncomingCallData] = useState(null);
 
   const { data: recipientUser } = useRecipientUser(recipientId);
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const open = Boolean(anchorEl);
 
   const handleAvatarClick = () => {
     if (recipientUser?._id) {
       navigate(`/chat/user/${recipientUser?._id}`);
     }
-  };
-
-  const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogout = () => {
-    handleMenuClose();
-
-    if (socket) {
-      socket.disconnect();
-    }
-
-    queryClient.clear();
-
-    logout();
-    navigate("/login");
   };
 
   const handleVideoCall = () => {
@@ -113,7 +90,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
     if (!socket) return;
 
     const handleIncomingCall = (data) => {
-      console.log("Zəng gəldi:", data);
+      console.log('data',data)
       setIncomingCallData(data);
       setVideoCallOpen(true);
     };
@@ -135,6 +112,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
     <Box
       sx={{
         width: "100%",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
       }}
@@ -207,30 +185,6 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
           </IconButton>
           <Notification />
           <DarkMode />
-          <IconButton
-            color="inherit"
-            onClick={handleMenuClick}
-            aria-controls={open ? "account-menu" : undefined}
-            aria-expanded={open ? "true" : undefined}
-          >
-            <MoreVert />
-          </IconButton>
-
-          <Menu
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleMenuClose}
-            onClick={handleMenuClose}
-            transformOrigin={{ horizontal: "right", vertical: "top" }}
-            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-          >
-            <MenuItem onClick={handleLogout}>
-              <ListItemIcon>
-                <Logout fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Logout</ListItemText>
-            </MenuItem>
-          </Menu>
         </Box>
       </Box>
 

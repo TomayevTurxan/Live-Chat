@@ -25,7 +25,7 @@ export const UserProvider = ({ children }) => {
 
   //configuration socket
   useEffect(() => {
-    const newSocket = io(import.meta.env.VITE_SOCKET_PORT, {
+    const newSocket = io( import.meta.env.VITE_SOCKET_PORT, {
       transports: ["websocket", "polling"],
       upgrade: true,
       rememberUpgrade: true,
@@ -55,7 +55,7 @@ export const UserProvider = ({ children }) => {
   const logout = () => {
     setUserInfo(null);
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("userInfo");
   };
   return (
     <UserContext.Provider

@@ -8,7 +8,6 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-// MUI Icons
 import PhoneIcon from "@mui/icons-material/Phone";
 import UserContext from "../../context/UserInfo";
 import CallContext from "../../context/CallContext";
@@ -20,7 +19,7 @@ const VideoCall = ({
   incomingCallData,
   setIncomingCallData,
 }) => {
-  const { socket } = useContext(UserContext);
+  const { socket, userInfo } = useContext(UserContext);
   const [me, setMe] = useState("");
   const [name, setName] = useState("");
   const myVideo = useRef();
@@ -50,12 +49,12 @@ const VideoCall = ({
     });
 
     socket.on("callUser", (data) => {
+      console.log("data", data);
       setReceivingCall(true);
       setCaller(data.from);
-      setName(data.name);
       setCallerSignal(data.signal);
     });
-    
+
     socket.on("callAccepted", () => {
       setCallAccepted(true);
     });
@@ -78,7 +77,6 @@ const VideoCall = ({
     setCallAccepted(false);
     setCaller("");
     setCallerSignal(null);
-    setName("");
     setIncomingCallData(null);
 
     if (connectionRef.current) {
@@ -102,7 +100,7 @@ const VideoCall = ({
   };
 
   const callUser = (id) => {
-    console.log('id', id);
+    console.log("id", id);
     setIsCalling(true);
 
     getCameraStream()
@@ -117,18 +115,16 @@ const VideoCall = ({
           trickle: false,
           stream: currentStream,
         });
-
         peer.on("signal", (data) => {
           socket.emit("callUser", {
             userToCall: id,
             signalData: data,
             from: me,
-            name: name,
+            name: userInfo?.name,
           });
         });
 
         peer.on("stream", (remoteStream) => {
-          console.log("Remote stream received in callUser");
           if (
             userVideo.current &&
             userVideo.current.srcObject !== remoteStream
@@ -138,7 +134,6 @@ const VideoCall = ({
         });
 
         socket.on("callAccepted", (signal) => {
-          console.log("Call accepted signal received");
           setCallAccepted(true);
           peer.signal(signal);
         });
@@ -168,9 +163,6 @@ const VideoCall = ({
         peer.on("signal", (data) => {
           setCallAccepted(true);
           socket.emit("answerCall", { signal: data, to: caller });
-        });
-        socket.on("callAccepted", (signal) => {
-          peer.signal(signal);
         });
         peer.on("stream", (remoteStream) => {
           console.log("Remote stream received in answerCall");

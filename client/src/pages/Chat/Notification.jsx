@@ -117,19 +117,24 @@ const Notification = () => {
               >
                 <ListItemText
                   primary={
-                    <Typography variant="subtitle2">
+                    <Typography variant="subtitle2" component="span">
                       {notification.senderName}
                     </Typography>
                   }
                   secondary={
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
+                    <Box component="span">
+                      <Typography
+                        variant="body2"
+                        component="span"
+                        color="text.secondary"
+                      >
                         {notification.count > 1
                           ? `${notification.count} new messages`
                           : `New message`}
                       </Typography>
                       <Typography
                         variant="caption"
+                        component="span"
                         color="text.disabled"
                         sx={{ mt: 0.5, display: "block" }}
                       >
@@ -160,7 +165,11 @@ const Notification = () => {
         anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        slotProps={{ sx: { width: 360 } }}
+        slotProps={{
+          paper: {
+            sx: { width: 300 }, 
+          },
+        }}
       >
         <Box sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
