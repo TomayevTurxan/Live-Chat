@@ -224,9 +224,6 @@ const VideoCall = ({
       cleanupCall();
     }
   }, [open]);
-  console.log("userVideo.current", userVideo);
-  console.log("callAcepted", callAccepted);
-  console.log("isCalling", isCalling);
 
   return (
     <Dialog

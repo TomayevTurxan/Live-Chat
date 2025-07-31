@@ -7,18 +7,8 @@ import {
   Button,
   useMediaQuery,
   useTheme,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
 } from "@mui/material";
-import {
-  Menu as MenuIcon,
-  ArrowBack,
-  Send,
-  MoreVert,
-  Logout,
-} from "@mui/icons-material";
+import { Menu as MenuIcon, ArrowBack, Send } from "@mui/icons-material";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import ChatMessages from "./ChatMessages";
@@ -90,7 +80,6 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
     if (!socket) return;
 
     const handleIncomingCall = (data) => {
-      console.log('data',data)
       setIncomingCallData(data);
       setVideoCallOpen(true);
     };

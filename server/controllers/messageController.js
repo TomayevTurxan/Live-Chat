@@ -28,5 +28,18 @@ const getMessages = async (req, res) => {
     res.status(500).json(error);
   }
 };
+const deleteMessage = async (req, res) => {
+  const messageId = req.params.messageId;
 
-module.exports = { createMessage, getMessages };
+  try {
+    const deleted = await messageModel.findByIdAndDelete(messageId);
+    if (!deleted) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+    res.status(200).json({ message: "Message deleted successfully", deleted });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting message", error });
+  }
+};
+
+module.exports = { createMessage, getMessages, deleteMessage };

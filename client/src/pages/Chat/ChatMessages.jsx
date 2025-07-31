@@ -31,7 +31,13 @@ const ChatMessages = ({ currentChat }) => {
 
   if (isLoading) return <LinearProgress />;
 
-  return <MessagesList messages={messages} userInfo={userInfo} />;
+  return (
+    <MessagesList
+      setMessages={setMessages}
+      messages={messages}
+      userInfo={userInfo}
+    />
+  );
 };
 
 export default ChatMessages;

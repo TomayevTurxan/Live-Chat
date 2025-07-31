@@ -96,6 +96,21 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Delete Message
+  socket.on("deleteMessage", async ({ messageId, chatId }) => {
+    try {
+      await messageModel.findByIdAndDelete(messageId);
+      const senderSocketId = socket.id;
+      onlineUsers.forEach((user) => {
+        if (user.socketId !== senderSocketId) {
+          io.to(user.socketId).emit("messageDeleted", { messageId, chatId });
+        }
+      });
+    } catch (error) {
+      console.error("deleteMessage error:", error);
+    }
+  });
+
   socket.on("disconnect", () => {
     onlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id);
     io.emit("getOnlineUsers", onlineUsers);

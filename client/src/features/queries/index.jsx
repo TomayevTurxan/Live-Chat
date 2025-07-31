@@ -75,6 +75,7 @@ export function useGetMessages(messageId) {
   return useQuery({
     queryKey: keys.getMessages(messageId),
     queryFn: () => getMessagesApi(messageId),
+    enabled: !!messageId,
   });
 }
 

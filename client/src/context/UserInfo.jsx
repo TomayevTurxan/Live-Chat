@@ -25,7 +25,7 @@ export const UserProvider = ({ children }) => {
 
   //configuration socket
   useEffect(() => {
-    const newSocket = io( import.meta.env.VITE_SOCKET_PORT, {
+    const newSocket = io( "http://localhost:3000", {
       transports: ["websocket", "polling"],
       upgrade: true,
       rememberUpgrade: true,

@@ -1,5 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { registerUser, loginUser, createChatApi, postMessage, blockUser } from "../api";
+import {
+  registerUser,
+  loginUser,
+  createChatApi,
+  postMessage,
+  blockUser,
+  deleteMessage,
+} from "../api";
 
 export const useRegister = () => {
   return useMutation({
@@ -33,6 +40,14 @@ export const useBlockUser = () => {
   return useMutation({
     mutationFn: (data) => {
       return blockUser(data);
+    },
+  });
+};
+
+export const useDeleteMessage = () => {
+  return useMutation({
+    mutationFn: (messageId) => {
+      return deleteMessage(messageId);
     },
   });
 };
