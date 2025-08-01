@@ -18,13 +18,18 @@ import EmojiEmotionsOutlinedIcon from "@mui/icons-material/EmojiEmotionsOutlined
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { keys } from "../../features/queries";
 
 const MessageBubble = ({
   message,
   isMyMessage,
   formatTime,
   onDeleteMessage,
+  userInfo,
 }) => {
+  const queryClient = useQueryClient();
+
   const [isHovered, setIsHovered] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState(null);
@@ -41,8 +46,11 @@ const MessageBubble = ({
     handleMenuClose();
     setIsDeleting(true);
     try {
-      console.log("sad", message);
       await onDeleteMessage(message._id, message.chatId);
+      queryClient.invalidateQueries({
+        queryKey: keys.getWithLastMessage(userInfo._id),
+      });
+      queryClient.invalidateQueries(["messages"]);
     } catch (error) {
       setIsDeleting(false);
       console.error("Failed to delete message:", error);

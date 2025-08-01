@@ -8,7 +8,7 @@ const useSocketHandlers = (
   socket,
   currentChat,
   userInfo,
-  setMessages,
+  // setMessages,
   setNotifications
 ) => {
   const queryClient = useQueryClient();
@@ -20,7 +20,11 @@ const useSocketHandlers = (
 
     const handleGetMessage = (res) => {
       if (currentChat?._id !== res.chatId) return;
-      setMessages((prev) => [...prev, { ...res, isRead: true }]);
+      queryClient.setQueryData(
+        keys.getMessages(currentChat._id),
+        (old = []) => [...old, { ...res, isRead: true }]
+      );
+
       messageAudio.play();
 
       queryClient.invalidateQueries({
@@ -45,31 +49,39 @@ const useSocketHandlers = (
 
     const handleGetMessagesRead = ({ chatId }) => {
       if (currentChat?._id !== chatId) return;
-
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
+      queryClient.setQueryData(keys.getMessages(chatId), (old = []) =>
+        old.map((msg) =>
           msg.chatId === chatId ? { ...msg, isRead: true } : msg
         )
       );
+
+      queryClient.invalidateQueries({
+        queryKey: keys.getWithLastMessage(userInfo._id),
+      });
+    };
+    const handleDeleteMessage = ({ messageId, chatId }) => {
+      if (currentChat?._id !== chatId) return;
+      console.log("messageId, chatId", messageId, chatId);
+      queryClient.setQueryData(keys.getMessages(chatId), (old = []) =>
+        old.filter((msg) => msg._id !== messageId)
+      );
+      queryClient.invalidateQueries({
+        queryKey: keys.getWithLastMessage(userInfo._id),
+      });
     };
 
     socket.on("getMessage", handleGetMessage);
     socket.on("getNotification", handleGetNotification);
     socket.on("getMessagesRead", handleGetMessagesRead);
+    socket.on("messageDeleted", handleDeleteMessage);
 
     return () => {
       socket.off("getMessage", handleGetMessage);
       socket.off("getNotification", handleGetNotification);
       socket.off("getMessagesRead", handleGetMessagesRead);
+      socket.off("messageDeleted", handleDeleteMessage);
     };
-  }, [
-    socket,
-    currentChat,
-    userInfo,
-    setMessages,
-    setNotifications,
-    queryClient,
-  ]);
+  }, [socket, currentChat, userInfo, setNotifications, queryClient]);
 
   useEffect(() => {
     if (!socket || !currentChat || !userInfo) return;
@@ -78,12 +90,6 @@ const useSocketHandlers = (
       chatId: currentChat._id,
       userId: userInfo._id,
     });
-
-    setMessages((prevMessages) =>
-      prevMessages.map((msg) =>
-        msg.chatId === currentChat._id ? { ...msg, isRead: true } : msg
-      )
-    );
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {

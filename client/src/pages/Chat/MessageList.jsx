@@ -1,16 +1,16 @@
-import { Box } from "@mui/material";
-import { useRef, useEffect, useContext } from "react";
+import { Box, LinearProgress } from "@mui/material";
+import { useRef, useContext, useEffect } from "react";
 import MessageBubble from "./MessageBubble";
 import UserContext from "../../context/UserInfo";
 import { useDeleteMessage } from "../../features/mutations";
+import { useGetMessages } from "../../features/queries";
 
-const MessagesList = ({ messages, userInfo, setMessages }) => {
+const MessagesList = ({ userInfo, currentChat }) => {
   const scroll = useRef();
+  const { data: messages, isLoading } = useGetMessages(currentChat?._id);
+
   const { socket } = useContext(UserContext);
   const deleteMessage = useDeleteMessage();
-  useEffect(() => {
-    scroll.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const isMyMessage = (message) => {
     return message.senderId === userInfo?._id;
@@ -21,7 +21,7 @@ const MessagesList = ({ messages, userInfo, setMessages }) => {
     return date.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false, 
+      hour12: false,
     });
   };
 
@@ -29,11 +29,17 @@ const MessagesList = ({ messages, userInfo, setMessages }) => {
     try {
       await deleteMessage.mutateAsync(messageId);
       socket.emit("deleteMessage", { messageId, chatId });
-      setMessages((prev) => prev.filter((m) => m._id !== messageId));
     } catch (error) {
       console.error("Failed to delete message:", error);
     }
   };
+  useEffect(() => {
+    if (scroll.current) {
+      scroll.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages]);
+
+  if (isLoading) return <LinearProgress />;
 
   return (
     <Box
@@ -43,7 +49,8 @@ const MessagesList = ({ messages, userInfo, setMessages }) => {
         display: "flex",
         flexDirection: "column",
         gap: 1,
-        p: 1,
+        pr: 4,
+        pl: 4,
       }}
     >
       {messages?.map((msg) => (

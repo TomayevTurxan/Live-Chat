@@ -29,7 +29,6 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const theme = useTheme();
-  const [message, setMessage] = useState("");
   const [videoCallOpen, setVideoCallOpen] = useState(false);
   const messageInputRef = useRef(null);
   const sendMessage = usePostMessage();
@@ -37,7 +36,6 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const { socket } = useContext(UserContext);
   const recipientId = currentChat?.members?.find((id) => id !== userInfo?._id);
   const [incomingCallData, setIncomingCallData] = useState(null);
-
   const { data: recipientUser } = useRecipientUser(recipientId);
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -55,7 +53,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
     setVideoCallOpen(false);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async (message) => {
     if (!message.trim()) return;
     const messageData = {
       chatId: currentChat._id,
@@ -63,11 +61,9 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
       text: message.trim(),
       isRead: false,
     };
-    sendMessage.mutate(messageData, {
+    return sendMessage.mutateAsync(messageData, {
       onSuccess: () => {
         queryClient.invalidateQueries(["messages"]);
-        setMessage("");
-        messageInputRef.current?.focus();
 
         socket.emit("sendMessage", {
           ...messageData,
@@ -76,6 +72,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
       },
     });
   };
+
   useEffect(() => {
     if (!socket) return;
 
@@ -179,48 +176,10 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
 
       <ChatMessages currentChat={currentChat} recipientId={recipientId} />
 
-      <Box
-        sx={{
-          p: { xs: 1, md: 2 },
-          borderTop: "1px solid",
-          borderColor: "divider",
-          backgroundColor: "background.paper",
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 1,
-        }}
-      >
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <InputEmojiComponent
-            message={message}
-            setMessage={setMessage}
-            handleSendMessage={handleSendMessage}
-            messageInputRef={messageInputRef}
-          />
-        </Box>
-
-        <Button
-          variant="contained"
-          type="button"
-          onClick={handleSendMessage}
-          disabled={
-            !message.trim() ||
-            !currentChat?._id ||
-            !userInfo?._id ||
-            sendMessage.isPending
-          }
-          startIcon={<Send />}
-          sx={{
-            height: { xs: "40px", md: "48px" },
-            fontSize: { xs: "0.875rem", md: "1rem" },
-            borderRadius: 3,
-            px: { xs: 2, md: 3 },
-          }}
-        >
-          {sendMessage.isPending ? "Sending..." : "Send"}
-        </Button>
-      </Box>
+      <InputEmojiComponent
+        handleSendMessage={handleSendMessage}
+        messageInputRef={messageInputRef}
+      />
 
       <VideoCall
         open={videoCallOpen}
