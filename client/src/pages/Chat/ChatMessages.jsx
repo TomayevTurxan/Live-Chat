@@ -5,7 +5,7 @@ import useSocketHandlers from "../../hooks/useSocketHandlers";
 import useNotificationHandler from "../../hooks/useNotificationHandler";
 import MessagesList from "./MessageList";
 
-const ChatMessages = ({ currentChat }) => {
+const ChatMessages = ({ currentChat, onEditMessage }) => {
   const { userInfo } = useUser();
   const { notifications, setNotifications } = useChatData();
   const { socket } = useContext(UserContext);
@@ -13,7 +13,13 @@ const ChatMessages = ({ currentChat }) => {
   useSocketHandlers(socket, currentChat, userInfo, setNotifications);
   useNotificationHandler(currentChat, notifications, setNotifications);
 
-  return <MessagesList userInfo={userInfo} currentChat={currentChat} />;
+  return (
+    <MessagesList
+      onEditMessage={onEditMessage}
+      userInfo={userInfo}
+      currentChat={currentChat}
+    />
+  );
 };
 
 export default ChatMessages;

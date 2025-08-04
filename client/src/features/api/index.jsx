@@ -44,6 +44,11 @@ export const deleteMessage = async (messageId) => {
   return response.data;
 };
 
+export const editMessage = async (messageId, data) => {
+  const response = await axiosInstance.put(`messages/${messageId}`, data);
+  return response.data;
+};
+
 export const getWithLastMessageApi = async (userId) => {
   const response = await axiosInstance.get(`chats/withLastMessage/${userId}`);
   return response.data;

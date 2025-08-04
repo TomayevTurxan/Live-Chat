@@ -1,16 +1,11 @@
 import { Box, LinearProgress } from "@mui/material";
-import { useRef, useContext, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import MessageBubble from "./MessageBubble";
-import UserContext from "../../context/UserInfo";
-import { useDeleteMessage } from "../../features/mutations";
 import { useGetMessages } from "../../features/queries";
 
-const MessagesList = ({ userInfo, currentChat }) => {
+const MessagesList = ({ userInfo, currentChat, onEditMessage }) => {
   const scroll = useRef();
   const { data: messages, isLoading } = useGetMessages(currentChat?._id);
-
-  const { socket } = useContext(UserContext);
-  const deleteMessage = useDeleteMessage();
 
   const isMyMessage = (message) => {
     return message.senderId === userInfo?._id;
@@ -25,14 +20,6 @@ const MessagesList = ({ userInfo, currentChat }) => {
     });
   };
 
-  const handleDeleteMessage = async (messageId, chatId) => {
-    try {
-      await deleteMessage.mutateAsync(messageId);
-      socket.emit("deleteMessage", { messageId, chatId });
-    } catch (error) {
-      console.error("Failed to delete message:", error);
-    }
-  };
   useEffect(() => {
     if (scroll.current) {
       scroll.current.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -60,7 +47,7 @@ const MessagesList = ({ userInfo, currentChat }) => {
           isMyMessage={isMyMessage(msg)}
           userInfo={userInfo}
           formatTime={formatTime}
-          onDeleteMessage={handleDeleteMessage}
+          onEditMessage={onEditMessage}
         />
       ))}
       <div ref={scroll} />

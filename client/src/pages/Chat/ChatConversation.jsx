@@ -12,7 +12,6 @@ import { Menu as MenuIcon, ArrowBack, Send } from "@mui/icons-material";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import ChatMessages from "./ChatMessages";
-import { usePostMessage } from "../../features/mutations";
 import UserContext from "../../context/UserInfo";
 import { useUser } from "../../context/contexts";
 import { useRecipientUser } from "../../features/queries";
@@ -24,25 +23,29 @@ import DarkMode from "../../components/DarkMode";
 import DuoIcon from "@mui/icons-material/Duo";
 import VideoCall from "./VideoCall";
 import { useEffect } from "react";
+import { useBlockUser } from "../../features/mutations";
+import UserDetail from "./UserDetail";
 
 const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const theme = useTheme();
   const [videoCallOpen, setVideoCallOpen] = useState(false);
+  const [userDetailDrawerOpen, setUserDetailDrawerOpen] = useState(false);
   const messageInputRef = useRef(null);
-  const sendMessage = usePostMessage();
+  const blockUser = useBlockUser();
   const { userInfo } = useUser();
   const { socket } = useContext(UserContext);
   const recipientId = currentChat?.members?.find((id) => id !== userInfo?._id);
   const [incomingCallData, setIncomingCallData] = useState(null);
-  const { data: recipientUser } = useRecipientUser(recipientId);
+  const { data: recipientUser, isLoading: recipientUserLoading } =
+    useRecipientUser(recipientId);
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [editMode, setEditMode] = useState(false);
+  const [messageBeingEdited, setMessageBeingEdited] = useState(null);
 
   const handleAvatarClick = () => {
-    if (recipientUser?._id) {
-      navigate(`/chat/user/${recipientUser?._id}`);
-    }
+    setUserDetailDrawerOpen(true);
   };
 
   const handleVideoCall = () => {
@@ -53,26 +56,55 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
     setVideoCallOpen(false);
   };
 
-  const handleSendMessage = async (message) => {
-    if (!message.trim()) return;
-    const messageData = {
-      chatId: currentChat._id,
-      senderId: userInfo._id,
-      text: message.trim(),
-      isRead: false,
-    };
-    return sendMessage.mutateAsync(messageData, {
-      onSuccess: () => {
-        queryClient.invalidateQueries(["messages"]);
+  const handleStartChat = () => {
+    setUserDetailDrawerOpen(false);
+  };
 
-        socket.emit("sendMessage", {
-          ...messageData,
-          recipientId,
-        });
+  const handleBlockUser = () => {
+    if (!recipientUser?._id) return;
+
+    const messageData = {
+      blockerId: userInfo?._id,
+      blockedId: recipientUser._id,
+    };
+
+    blockUser.mutate(messageData, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["users"]);
+        setUserDetailDrawerOpen(false);
+        navigate("/chat");
+      },
+      onError: (error) => {
+        console.error("Block user failed:", error);
       },
     });
   };
 
+  const handleSendMessage = (message) => {
+    if (!message.trim()) return;
+
+    const messageData = {
+      chatId: currentChat._id,
+      senderId: userInfo._id,
+      text: message.trim(),
+    };
+
+    if (editMode) {
+      socket.emit("editMessage", {
+        ...messageData,
+        messageId: messageBeingEdited._id,
+      });
+      setEditMode(false);
+      setMessageBeingEdited(null);
+    } else {
+      socket.emit("sendMessage", messageData);
+    }
+  };
+
+  const handleEditMessage = (message) => {
+    setEditMode(true);
+    setMessageBeingEdited(message);
+  };
   useEffect(() => {
     if (!socket) return;
 
@@ -174,11 +206,18 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
         </Box>
       </Box>
 
-      <ChatMessages currentChat={currentChat} recipientId={recipientId} />
+      <ChatMessages
+        onEditMessage={handleEditMessage}
+        currentChat={currentChat}
+        recipientId={recipientId}
+      />
 
       <InputEmojiComponent
         handleSendMessage={handleSendMessage}
         messageInputRef={messageInputRef}
+        isEditing={editMode}
+        messageBeingEdited={messageBeingEdited}
+        // onCancelEdit={handleCancelEdit}
       />
 
       <VideoCall
@@ -187,6 +226,15 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
         recipientUser={recipientUser}
         incomingCallData={incomingCallData}
         setIncomingCallData={setIncomingCallData}
+      />
+
+      <UserDetail
+        open={userDetailDrawerOpen}
+        onClose={() => setUserDetailDrawerOpen(false)}
+        recipientUser={recipientUser}
+        onStartChat={handleStartChat}
+        onBlockUser={handleBlockUser}
+        isLoading={recipientUserLoading}
       />
     </Box>
   );

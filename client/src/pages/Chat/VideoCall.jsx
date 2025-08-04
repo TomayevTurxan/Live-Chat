@@ -100,6 +100,7 @@ const VideoCall = ({
   };
 
   const callUser = (id) => {
+    console.log("id", id);
     setIsCalling(true);
 
     getCameraStream()
@@ -222,7 +223,7 @@ const VideoCall = ({
       socket.emit("callEnded");
       cleanupCall();
     }
-  }, []);
+  }, [open]);
 
   return (
     <Dialog

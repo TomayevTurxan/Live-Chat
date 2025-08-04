@@ -6,6 +6,7 @@ import {
   postMessage,
   blockUser,
   deleteMessage,
+  editMessage,
 } from "../api";
 
 export const useRegister = () => {
@@ -48,6 +49,14 @@ export const useDeleteMessage = () => {
   return useMutation({
     mutationFn: (messageId) => {
       return deleteMessage(messageId);
+    },
+  });
+};
+
+export const useEditMessage = () => {
+  return useMutation({
+    mutationFn: (messageId) => {
+      return editMessage(messageId);
     },
   });
 };

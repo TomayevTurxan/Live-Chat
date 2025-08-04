@@ -1,29 +1,30 @@
-import { useParams, useNavigate } from "react-router-dom";
 import {
-  Grid,
+  Drawer,
   Box,
   Avatar,
   Typography,
   IconButton,
   Button,
+  Divider,
 } from "@mui/material";
-import { Close, Email, Person, Schedule, Message } from "@mui/icons-material";
-import ChipOnline from "../../components/Chip";
-import { useRecipientUser } from "../../features/queries";
-import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
-import { useBlockUser } from "../../features/mutations";
-import { useUser } from "../../context/contexts";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  Close,
+  Email,
+  Person,
+  Schedule,
+  Message,
+  Block,
+} from "@mui/icons-material";
 
-const UserDetail = () => {
-  const { userId } = useParams();
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const { userInfo } = useUser();
-  const { data: recipientUser, isLoading } = useRecipientUser(userId);
-  const handleBack = () => navigate("/chat");
-  const handleStartChat = () => navigate("/chat");
-  const blockUser = useBlockUser();
+const UserDetail = ({
+  open,
+  onClose,
+  recipientUser,
+  onStartChat,
+  onBlockUser,
+  isLoading,
+}) => {
+
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -31,165 +32,223 @@ const UserDetail = () => {
       day: "numeric",
     });
 
-  const handleBlockUser = () => {
-    const messageData = {
-      blockerId: userInfo?._id,
-      blockedId: userId,
-    };
-    blockUser.mutate(messageData, {
-      onSuccess: () => {
-        queryClient.invalidateQueries(["users"]);
-        navigate("/chat");
-      },
-      onError: (error) => {
-        console.error("Block user failed:", error);
-      },
-    });
-  };
-
-  if (isLoading) {
-    return (
-      <Box p={3}>
-        <Typography>Loading...</Typography>
-      </Box>
+    
+    if (!recipientUser) {
+      return (
+        <Drawer anchor="right" open={open} onClose={onClose}>
+        <Box sx={{ width: 350, p: 3 }}>
+          <Typography variant="h6" color="error">
+            User not found
+          </Typography>
+        </Box>
+      </Drawer>
     );
   }
-
-  if (!recipientUser) {
+  if (isLoading) {
     return (
-      <Box p={3}>
-        <Typography variant="h6" color="error">
-          User not found
-        </Typography>
-        <Button onClick={handleBack} sx={{ mt: 2 }}>
-          Back to Chat
-        </Button>
-      </Box>
+      <Drawer anchor="right" open={open} onClose={onClose}>
+        <Box sx={{ width: 350, p: 3 }}>
+          <Typography>Loading...</Typography>
+        </Box>
+      </Drawer>
     );
   }
 
   return (
-    <Box sx={{ width: "100%", maxWidth: 800, mx: "auto", p: 3 }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Typography variant="h5">
-          <IconButton onClick={handleBack}>
-            <KeyboardBackspaceIcon />
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: "100%", sm: 400, md: 450 },
+            maxWidth: "100vw",
+          },
+        },
+      }}
+    >
+      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        <Box
+          sx={{
+            p: 2,
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: "background.paper",
+            position: "sticky",
+            top: 0,
+            zIndex: 1,
+          }}
+        >
+          <Typography variant="h6" fontWeight={600}>
+            Contact Info
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <Close />
           </IconButton>
-          User Profile
-        </Typography>
-      </Box>
+        </Box>
 
-      <Grid container spacing={4}>
-        <Grid size={12}>
+        
+        <Box sx={{ flex: 1, overflow: "auto" }}>
           <Box
             sx={{
+              p: 3,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               gap: 2,
+              backgroundColor: "background.default",
             }}
           >
             <Avatar
               src={recipientUser?.avatar}
-              sx={{ width: 150, height: 150, fontSize: 48 }}
+              sx={{
+                width: 120,
+                height: 120,
+                fontSize: 36,
+                mb: 1,
+              }}
             >
               {recipientUser?.name?.charAt(0)}
             </Avatar>
 
-            <Typography variant="h6">{recipientUser?.name}</Typography>
+            <Typography variant="h5" fontWeight={600} textAlign="center">
+              {recipientUser?.name}
+            </Typography>
+          </Box>
 
-            <ChipOnline recipientUser={recipientUser} />
+          <Divider />
 
+
+          <Box sx={{ p: 2, display: "flex", gap: 1 }}>
             <Button
               variant="contained"
               startIcon={<Message />}
-              onClick={handleStartChat}
+              onClick={() => {
+                onStartChat?.();
+                onClose();
+              }}
               fullWidth
+              sx={{ borderRadius: 2 }}
             >
-              Start Chat
+              Message
             </Button>
-          </Box>
-        </Grid>
-
-        <Grid size={12}>
-          <Grid container spacing={3}>
-            <Grid size={12}>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Username
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{ display: "flex", alignItems: "center" }}
-                >
-                  <Person sx={{ mr: 1 }} />
-                  {recipientUser?.name}
-                </Typography>
-              </Box>
-            </Grid>
-
-            {recipientUser?.email && (
-              <Grid item size={12}>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Email
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{ display: "flex", alignItems: "center" }}
-                  >
-                    <Email sx={{ mr: 1 }} />
-                    {recipientUser?.email}
-                  </Typography>
-                </Box>
-              </Grid>
-            )}
-
-            {recipientUser?.createdAt && (
-              <Grid size={12}>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Member Since
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{ display: "flex", alignItems: "center" }}
-                  >
-                    <Schedule sx={{ mr: 1 }} />
-                    {formatDate(recipientUser.createdAt)}
-                  </Typography>
-                </Box>
-              </Grid>
-            )}
-
-            {recipientUser?.bio && (
-              <Grid item size={12}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Bio
-                </Typography>
-                <Typography variant="body1">{recipientUser?.bio}</Typography>
-              </Grid>
-            )}
             <Button
               variant="outlined"
               color="error"
-              startIcon={<Close />}
-              onClick={handleBlockUser}
-              fullWidth
+              startIcon={<Block />}
+              onClick={() => {
+                onBlockUser?.();
+                onClose();
+              }}
+              sx={{ borderRadius: 2, minWidth: 100 }}
             >
-              Block User
+              Block
             </Button>
-          </Grid>
-        </Grid>
-      </Grid>
-    </Box>
+          </Box>
+
+          <Divider />
+
+
+          <Box sx={{ p: 2 }}>
+            <Typography
+              variant="subtitle2"
+              color="text.secondary"
+              sx={{ mb: 2, fontWeight: 600 }}
+            >
+              About
+            </Typography>
+
+
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <Person sx={{ mr: 1, color: "text.secondary", fontSize: 20 }} />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  fontWeight={500}
+                >
+                  Username
+                </Typography>
+              </Box>
+              <Typography variant="body1" sx={{ ml: 3 }}>
+                {recipientUser?.name}
+              </Typography>
+            </Box>
+
+
+            {recipientUser?.email && (
+              <Box sx={{ mb: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <Email
+                    sx={{ mr: 1, color: "text.secondary", fontSize: 20 }}
+                  />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    fontWeight={500}
+                  >
+                    Email
+                  </Typography>
+                </Box>
+                <Typography variant="body1" sx={{ ml: 3 }}>
+                  {recipientUser?.email}
+                </Typography>
+              </Box>
+            )}
+
+
+            {recipientUser?.createdAt && (
+              <Box sx={{ mb: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <Schedule
+                    sx={{ mr: 1, color: "text.secondary", fontSize: 20 }}
+                  />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    fontWeight={500}
+                  >
+                    Member Since
+                  </Typography>
+                </Box>
+                <Typography variant="body1" sx={{ ml: 3 }}>
+                  {formatDate(recipientUser.createdAt)}
+                </Typography>
+              </Box>
+            )}
+
+            {recipientUser?.bio && (
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  fontWeight={500}
+                  sx={{ mb: 1 }}
+                >
+                  Bio
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    backgroundColor: "background.default",
+                    p: 2,
+                    borderRadius: 1,
+                    border: "1px solid",
+                    borderColor: "divider",
+                  }}
+                >
+                  {recipientUser?.bio}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Box>
+    </Drawer>
   );
 };
 

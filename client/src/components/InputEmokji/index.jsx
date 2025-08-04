@@ -7,11 +7,18 @@ const InputEmojiComponent = ({
   handleSendMessage,
   handleKeyPress,
   messageInputRef,
+  isEditing,
+  messageBeingEdited,
 }) => {
   const [message, setInternalMessage] = useState("");
 
   const setMessage = (value) => {
     setInternalMessage(value);
+  };
+  const handleSend = async () => {
+    if (!message.trim()) return;
+    await handleSendMessage(message);
+    setMessage("");
   };
 
   return (
@@ -29,9 +36,9 @@ const InputEmojiComponent = ({
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <InputEmoji
-          value={message}
+          value={isEditing ? messageBeingEdited?.text : message}
           onChange={setMessage}
-          onEnter={handleSendMessage}
+          onEnter={handleSend}
           onKeyPress={handleKeyPress}
           fontFamily="nunito"
           borderColor="rgba(72, 112, 223, 0.2)"
@@ -44,11 +51,7 @@ const InputEmojiComponent = ({
       <Button
         variant="contained"
         type="button"
-        onClick={() => {
-          handleSendMessage(message).then(() => {
-            setMessage("");
-          });
-        }}
+        onClick={handleSend}
         disabled={!message.trim()}
         startIcon={<Send />}
         sx={{

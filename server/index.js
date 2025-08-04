@@ -6,7 +6,8 @@ const { Server } = require("socket.io");
 const userRoute = require("./routes/userRoute");
 const chatRoute = require("./routes/chatRoute");
 const messageRoute = require("./routes/messageRoute");
-const messageModel = require("./models/messageModel"); // doğru path ilə
+const messageModel = require("./models/messageModel");
+const chatModel = require("./models/chatModel");
 
 const app = express();
 require("dotenv").config();
@@ -59,22 +60,34 @@ io.on("connection", (socket) => {
     io.emit("getOnlineUsers", onlineUsers);
   });
 
-  //add Message
-  socket.on("sendMessage", (message) => {
-    const user = onlineUsers.find(
-      (user) => user.userId === message.recipientId
-    );
-    if (user) {
-      io.to(user.socketId).emit("getMessage", message);
-      io.to(user.socketId).emit("getNotification", {
-        senderId: message.senderId,
+  socket.on("sendMessage", async (message) => {
+    try {
+      const savedMessage = await messageModel.create({
         chatId: message.chatId,
+        senderId: message.senderId,
+        text: message.text,
         isRead: false,
-        date: new Date(),
       });
+
+      const chat = await chatModel.findById(message.chatId);
+      if (!chat) return;
+
+      chat.members.forEach((memberId) => {
+        const user = onlineUsers.find((u) => u.userId === memberId.toString());
+        if (user) {
+          io.to(user.socketId).emit("getMessage", savedMessage);
+          io.to(user.socketId).emit("getNotification", {
+            senderId: message.senderId,
+            chatId: message.chatId,
+            isRead: false,
+            date: new Date(),
+          });
+        }
+      });
+    } catch (error) {
+      console.error("sendMessage socket error:", error);
     }
   });
-
   socket.on("markAsRead", async ({ chatId, userId }) => {
     try {
       const result = await messageModel.updateMany(
@@ -116,6 +129,28 @@ io.on("connection", (socket) => {
     io.emit("getOnlineUsers", onlineUsers);
 
     socket.broadcast.emit("callEnded");
+  });
+
+  // Edit Message
+  socket.on("editMessage", async ({ messageId, text, chatId }) => {
+    try {
+      const updatedMessage = await messageModel.findByIdAndUpdate(
+        messageId,
+        { text },
+        { new: true }
+      );
+
+      if (!updatedMessage) return;
+
+      onlineUsers.forEach((user) => {
+        io.to(user.socketId).emit("messageEdited", {
+          message: updatedMessage,
+          chatId,
+        });
+      });
+    } catch (error) {
+      console.error("editMessage socket error:", error);
+    }
   });
 
   socket.on("callUser", (data) => {

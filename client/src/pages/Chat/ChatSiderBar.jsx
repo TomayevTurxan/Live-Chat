@@ -155,7 +155,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
           gap: 2,
         }}
       >
-        {/* Online Status */}
+
         <Button
           onClick={handleLogout}
           variant="outlined"

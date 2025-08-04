@@ -2,8 +2,21 @@ const messageModel = require("../models/messageModel");
 
 //creatre message
 const createMessage = async (req, res) => {
-  const { chatId, senderId, text, isRead } = req.body;
+  const { chatId, senderId, text, isRead, messageId } = req.body;
+
   try {
+    if (messageId) {
+      const updated = await messageModel.findByIdAndUpdate(messageId, { text });
+
+      if (!updated) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+
+      return res
+        .status(200)
+        .json({ message: "Message updated successfully", data: updated });
+    }
+
     const newMessage = new messageModel({
       chatId,
       senderId,
@@ -11,10 +24,12 @@ const createMessage = async (req, res) => {
       isRead,
     });
 
-    const response = await newMessage.save();
-    res.status(200).json(response);
+    const savedMessage = await newMessage.save();
+    res.status(200).json(savedMessage);
   } catch (error) {
-    res.status(500).json({ message: "Error creating message", error });
+    res
+      .status(500)
+      .json({ message: "Failed to create or edit message", error });
   }
 };
 
@@ -42,4 +57,20 @@ const deleteMessage = async (req, res) => {
   }
 };
 
-module.exports = { createMessage, getMessages, deleteMessage };
+const editMessage = async (req, res) => {
+  const messageId = req.params.messageId;
+  const { text } = req.body;
+
+  try {
+    const updated = await messageModel.findByIdAndUpdate(messageId, { text });
+
+    if (!updated) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    res.status(200).json({ message: "Message updated successfully", updated });
+  } catch (error) {
+    res.status(500).json({ message: "Error editing message", error });
+  }
+};
+module.exports = { createMessage, getMessages, deleteMessage, editMessage };

@@ -4,13 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import notificationSound from "../../public/mixkit-correct-answer-tone-2870.wav";
 import messageSound from "../../public/mixkit-message-pop-alert-2354.mp3";
 
-const useSocketHandlers = (
-  socket,
-  currentChat,
-  userInfo,
-  // setMessages,
-  setNotifications
-) => {
+const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
   const queryClient = useQueryClient();
   const messageAudio = new Audio(messageSound);
   const notificationAudio = new Audio(notificationSound);
@@ -61,7 +55,6 @@ const useSocketHandlers = (
     };
     const handleDeleteMessage = ({ messageId, chatId }) => {
       if (currentChat?._id !== chatId) return;
-      console.log("messageId, chatId", messageId, chatId);
       queryClient.setQueryData(keys.getMessages(chatId), (old = []) =>
         old.filter((msg) => msg._id !== messageId)
       );
@@ -70,16 +63,31 @@ const useSocketHandlers = (
       });
     };
 
+    const handleMessageEdited = ({ message, chatId }) => {
+      if (currentChat?._id !== chatId) return;
+
+      queryClient.setQueryData(keys.getMessages(chatId), (old = []) =>
+        old.map((msg) =>
+          msg._id === message._id ? { ...msg, text: message.text } : msg
+        )
+      );
+
+      queryClient.invalidateQueries({
+        queryKey: keys.getWithLastMessage(userInfo._id),
+      });
+    };
     socket.on("getMessage", handleGetMessage);
     socket.on("getNotification", handleGetNotification);
     socket.on("getMessagesRead", handleGetMessagesRead);
     socket.on("messageDeleted", handleDeleteMessage);
+    socket.on("messageEdited", handleMessageEdited);
 
     return () => {
       socket.off("getMessage", handleGetMessage);
       socket.off("getNotification", handleGetNotification);
       socket.off("getMessagesRead", handleGetMessagesRead);
       socket.off("messageDeleted", handleDeleteMessage);
+      socket.off("messageEdited", handleMessageEdited);
     };
   }, [socket, currentChat, userInfo, setNotifications, queryClient]);
 
