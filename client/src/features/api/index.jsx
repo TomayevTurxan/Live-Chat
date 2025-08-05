@@ -28,6 +28,22 @@ export const createChatApi = async (data) => {
   const response = await axiosInstance.post("/chats", data);
   return response.data;
 };
+export const acceptChatRequestApi = async (requestId) => {
+  const response = await axiosInstance.post(`chats/acceptChatRequest/${requestId}`);
+  return response.data;
+};
+export const getInComingChatRequests = async (userId) => {
+  const response = await axiosInstance.get(
+    `chats/inComingChatRequests/${userId}`
+  );
+  return response.data;
+};
+export const acceptChatRequest = async (requestId) => {
+  const response = await axiosInstance.post(
+    `chats/acceptChatRequest/${requestId}`
+  );
+  return response.data;
+};
 
 export const getMessagesApi = async (messageId) => {
   const response = await axiosInstance.get(`messages/${messageId}`);

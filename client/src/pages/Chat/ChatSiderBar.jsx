@@ -9,26 +9,38 @@ import {
   Tooltip,
   Paper,
   Button,
+  Badge,
+  Chip,
 } from "@mui/material";
-import { PersonAdd, Close, Logout } from "@mui/icons-material";
+import { PersonAdd, Close, Logout, MailOutline } from "@mui/icons-material";
 import UserChat from "./UserChat";
 import PotentialChats from "./PotentialChat";
-import { useChatData, useUser } from "../../context/contexts";
+import { useUser } from "../../context/contexts";
 import UserContext from "../../context/UserInfo";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import IncomingRequests from "./IncomingRequests";
+import { useUserChats } from "../../features/queries";
 
 const ChatSidebar = ({ onChatSelect, selectedChat }) => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { userInfo, logout } = useUser();
   const { socket } = useContext(UserContext);
-  const { userChats } = useChatData();
   const [showPotentialChats, setShowPotentialChats] = useState(false);
+  const [showIncomingRequests, setShowIncomingRequests] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const {
+    data: userChats,
+    isLoading: loadingChats,
+    isError,
+  } = useUserChats(userInfo?._id);
 
   const handlePotentialChatsToggle = () => {
     setShowPotentialChats(!showPotentialChats);
+  };
+  const handleIncomingRequestsToggle = () => {
+    setShowIncomingRequests((prev) => !prev);
   };
 
   const handleChatSelect = (chat) => {
@@ -49,10 +61,34 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
     navigate("/login");
   };
 
-  const filteredChats =
-    userChats?.filter(() => {
-      return true;
-    }) || [];
+  const filteredChats = userChats?.filter((chat) => {
+    const otherUser = chat.members.find(
+      (member) => member._id !== userInfo._id
+    );
+    return (
+      otherUser?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      otherUser?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+  if (loadingChats) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" p={2}>
+        <Typography variant="body2" color="text.secondary">
+          Loading chats...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" p={2}>
+        <Typography variant="body2" color="error">
+          Failed to load chats.
+        </Typography>
+      </Box>
+    );
+  }
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Box p={2}>
@@ -83,6 +119,17 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
                 size="small"
               >
                 <PersonAdd />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Incoming Chat Requests">
+              <IconButton
+                onClick={handleIncomingRequestsToggle}
+                color="primary"
+                size="small"
+              >
+                <Badge color="error" max={99}>
+                  <MailOutline />
+                </Badge>
               </IconButton>
             </Tooltip>
           </Box>
@@ -122,7 +169,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
                 transition: "background-color 0.2s ease",
               }}
             >
-              <UserChat chat={chat} user={userInfo} userChats={userChats} />
+              <UserChat chat={chat} user={userInfo} />
             </Box>
           ))
         ) : (
@@ -155,7 +202,6 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
           gap: 2,
         }}
       >
-
         <Button
           onClick={handleLogout}
           variant="outlined"
@@ -204,17 +250,57 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
               borderColor: "divider",
             }}
           >
-            <Typography
-              variant="h6"
-              sx={{ fontSize: { xs: "1rem", md: "1.25rem" } }}
-            >
-              Find People to Chat
-            </Typography>
+            <Box sx={{ p: 1 }}>
+              <Typography variant="h5" color="primary">
+                Send Chat Requests
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Send requests to start conversations
+              </Typography>
+            </Box>
             <IconButton onClick={handlePotentialChatsToggle}>
               <Close />
             </IconButton>
           </Box>
           <PotentialChats />
+        </Paper>
+      </Modal>
+      <Modal
+        open={showIncomingRequests}
+        onClose={handleIncomingRequestsToggle}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Paper
+          sx={{
+            width: "650px",
+            overflow: "auto",
+            outline: "none",
+          }}
+        >
+          <Box
+            sx={{
+              p: 2,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderBottom: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Box sx={{ p: 2 }}>
+              <Typography variant="h6" color="primary" gutterBottom>
+                Incoming Chat Requests
+              </Typography>
+            </Box>
+            <IconButton onClick={handleIncomingRequestsToggle}>
+              <Close />
+            </IconButton>
+          </Box>
+          <IncomingRequests userInfo={userInfo} />
         </Paper>
       </Modal>
     </Box>

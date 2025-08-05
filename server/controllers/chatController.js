@@ -1,27 +1,111 @@
+const mongoose = require("mongoose");
 const chatModel = require("../models/chatModel");
+const chatRequestModel = require("../models/chatRequestModel");
 const userModel = require("../models/userModel");
 
-const createChat = async (req, res) => {
-  const { firstId, secondId } = req.body;
+const createChatRequest = async (req, res) => {
+  const { senderId, receiverId } = req.body;
+
   try {
-    const chat = await chatModel.findOne({
-      members: { $all: [firstId, secondId] },
+    // Check if chat already exists
+    const existingChat = await chatModel.findOne({
+      members: { $all: [senderId, receiverId] },
     });
-    if (chat) {
-      return res.status(200).json(chat);
+
+    if (existingChat) {
+      return res.status(400).json({ message: "Chat already exists." });
     }
 
-    const newChat = new chatModel({
-      members: [firstId, secondId],
+    // Check if request already exists
+    const existingRequest = await chatRequestModel.findOne({
+      $or: [
+        { sender: senderId, receiver: receiverId },
+        { sender: receiverId, receiver: senderId },
+      ],
+      status: "pending",
     });
 
-    const response = await newChat.save();
-    res.status(200).json(response);
+    if (existingRequest) {
+      return res.status(400).json({ message: "Chat request already exists." });
+    }
+
+    const newRequest = new chatRequestModel({
+      sender: senderId,
+      receiver: receiverId,
+    });
+
+    await newRequest.save();
+    await newRequest.populate("sender", "name email");
+
+    res.status(200).json({
+      message: "Chat request sent successfully.",
+      request: newRequest,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error creating chat", error });
+    console.error("Error creating chat request:", error);
+    res.status(500).json({
+      message: "Error creating chat request",
+      error: error.message,
+    });
   }
 };
 
+const ChatRequest = require("../models/chatRequestModel");
+const Chat = require("../models/chatModel");
+const messageModel = require("../models/messageModel");
+
+const acceptChatRequest = async (req, res) => {
+  const requestId = req.params.requestId;
+
+  try {
+    const request = await ChatRequest.findById(requestId);
+
+    if (!request) {
+      return res.status(404).json({ message: "Chat request not found" });
+    }
+
+    const senderId = request.sender.toString();
+    const receiverId = request.receiver.toString();
+
+    // Check if chat already exists
+    const existingChat = await Chat.findOne({
+      members: { $all: [senderId, receiverId] },
+    });
+
+    if (!existingChat) {
+      await Chat.create({
+        members: [senderId, receiverId],
+      });
+    }
+
+    // Delete the request after accepting
+    await ChatRequest.findByIdAndDelete(requestId);
+
+    res.status(200).json({ message: "Chat request accepted and chat created" });
+  } catch (error) {
+    console.error("Error accepting chat request:", error);
+    res.status(500).json({ message: "Failed to accept chat request", error });
+  }
+};
+
+const inComingChatRequests = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const incomingRequests = await chatRequestModel
+      .find({ receiver: userId, status: "pending" })
+      .populate("sender", "name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(incomingRequests);
+  } catch (error) {
+    console.error("Error fetching incoming chat requests:", error);
+    res.status(500).json({
+      message: "Error fetching incoming chat requests",
+      error: error.message,
+    });
+  }
+};
 
 const findUserChats = async (req, res) => {
   const userId = req.params.userId;
@@ -30,17 +114,14 @@ const findUserChats = async (req, res) => {
     const currentUser = await userModel.findById(userId).select("blockedUsers");
     const blockedIds = currentUser.blockedUsers.map((id) => id.toString());
 
-    const chats = await chatModel.find({
-      members: { $in: [userId] },
+    const chats = await chatModel.find({ members: userId }).populate({
+      path: "members",
+      select: "name email _id",
     });
 
     const filteredChats = chats.filter((chat) => {
-      const otherMember = chat.members.find(
-        (member) => member.toString() !== userId
-      );
-      if (!otherMember) return false;
-
-      return !blockedIds.includes(otherMember.toString());
+      const otherUser = chat.members.find((m) => m._id.toString() !== userId);
+      return otherUser && !blockedIds.includes(otherUser._id.toString());
     });
 
     res.status(200).json(filteredChats);
@@ -52,14 +133,20 @@ const findUserChats = async (req, res) => {
 
 const findChat = async (req, res) => {
   const { firstId, secondId } = req.params;
+
   try {
-    const chat = await chatModel.find({
+    const chat = await chatModel.findOne({
       members: { $all: [firstId, secondId] },
     });
+
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
     res.status(200).json(chat);
   } catch (error) {
     console.log("Error:", error);
-    res.status(500).json(error);
+    res.status(500).json({ message: "Error finding chat", error });
   }
 };
 
@@ -67,46 +154,46 @@ const findUserChatsWithLastMessage = async (req, res) => {
   const userId = req.params.userId;
 
   try {
-    const chats = await chatModel.aggregate([
-      { $match: { members: userId } },
-      {
-        $lookup: {
-          from: "messages",
-          let: { chatId: { $toString: "$_id" } },
-          pipeline: [
-            { $match: { $expr: { $eq: ["$chatId", "$$chatId"] } } },
-            { $sort: { createdAt: -1 } },
-            { $limit: 1 },
-          ],
-          as: "lastMessage",
-        },
-      },
-      {
-        $unwind: {
-          path: "$lastMessage",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $project: {
-          members: 1,
-          lastMessage: 1,
-        },
-      },
-    ]);
+    // 1. İstifadəçinin daxil olduğu chat-ləri al
+    const chats = await chatModel.find({ members: userId }).populate({
+      path: "members",
+      select: "name email _id",
+    });
 
-    res.status(200).json(chats);
+    const result = [];
+
+    for (const chat of chats) {
+      // 2. Hər bir chat üçün sonuncu mesajı tap
+      const lastMessage = await messageModel
+        .findOne({ chatId: chat._id.toString() })
+        .sort({ createdAt: -1 });
+
+      // 3. Qarşı tərəfdəki user-i tap (chat.members-də userId olmayan)
+      const otherUser = chat.members.find((m) => m._id.toString() !== userId);
+
+      // 4. Cavaba əlavə et
+      result.push({
+        chatId: chat._id,
+        members: chat.members,
+        otherUser,
+        lastMessage,
+      });
+    }
+
+    res.status(200).json(result);
   } catch (error) {
-    console.error("Aggregation error:", error);
-    res
-      .status(500)
-      .json({ message: "Error fetching chats", error: error.message });
+    console.error("Error fetching chats with last messages:", error);
+    res.status(500).json({
+      message: "Error fetching chats with last messages",
+      error: error.message,
+    });
   }
 };
-
 module.exports = {
-  createChat,
+  createChatRequest,
   findUserChats,
   findChat,
   findUserChatsWithLastMessage,
+  acceptChatRequest,
+  inComingChatRequests,
 };

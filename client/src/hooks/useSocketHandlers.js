@@ -13,32 +13,59 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
     if (!socket) return;
 
     const handleGetMessage = (res) => {
-      if (currentChat?._id !== res.chatId) return;
-      queryClient.setQueryData(
-        keys.getMessages(currentChat._id),
-        (old = []) => [...old, { ...res, isRead: true }]
-      );
+      if (currentChat?._id === res.chatId) {
+        queryClient.setQueryData(
+          keys.getMessages(currentChat._id),
+          (old = []) => [...old, { ...res, isRead: true }]
+        );
+
+        socket.emit("markAsRead", {
+          chatId: currentChat._id,
+          userId: userInfo._id,
+        });
+      } else {
+        setNotifications((prev) => [res, ...prev]);
+      }
 
       messageAudio.play();
 
-      queryClient.invalidateQueries({
-        queryKey: keys.getWithLastMessage(userInfo._id),
-      });
+      // ✅ withLastMessages cache-i yenilə
+      queryClient.setQueryData(
+        keys.getWithLastMessage(userInfo._id),
+        (old = []) => {
+          const updated = old.map((chat) =>
+            chat.chatId === res.chatId
+              ? {
+                  ...chat,
+                  lastMessage: {
+                    ...res,
+                    isRead: currentChat?._id === res.chatId,
+                  },
+                }
+              : chat
+          );
 
-      socket.emit("markAsRead", {
-        chatId: currentChat._id,
-        userId: userInfo._id,
-      });
+          const exists = old.some((chat) => chat.chatId === res.chatId);
+          if (!exists) {
+            updated.push({
+              chatId: res.chatId,
+              members: [res.senderId, userInfo._id], // əgər varsa dəyiş
+              lastMessage: { ...res, isRead: currentChat?._id === res.chatId },
+            });
+          }
+
+          return updated;
+        }
+      );
     };
 
     const handleGetNotification = (res) => {
-      const isChatOpen = currentChat?.members.some((id) => id === res.senderId);
+      const isChatOpen = currentChat?._id === res.chatId;
       if (isChatOpen) {
-        setNotifications((prev) => [{ ...res, isRead: true }, ...prev]);
-      } else {
-        setNotifications((prev) => [res, ...prev]);
-        notificationAudio.play();
+        return;
       }
+      setNotifications((prev) => [res, ...prev]);
+      notificationAudio.play();
     };
 
     const handleGetMessagesRead = ({ chatId }) => {

@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const chatModel = require("../models/chatModel");
+const mongoose = require("mongoose");
 
 const createToken = (_id) => {
   const jwtkEY = process.env.JWT_SECRET_KEY;
@@ -105,8 +106,6 @@ const getUsers = async (req, res) => {
   }
 };
 
-const mongoose = require("mongoose");
-
 const getPotentialChatsUser = async (req, res) => {
   try {
     const currentUserId = req.params.userId;
@@ -115,46 +114,49 @@ const getPotentialChatsUser = async (req, res) => {
       return res.status(400).json("User ID is required.");
     }
 
-    const currentUser = await userModel.findById(currentUserId);
+    const currentUser = await userModel
+      .findById(currentUserId)
+      .select("blockedUsers");
     if (!currentUser) {
       return res.status(404).json("Current user not found.");
     }
 
     const existingChats = await chatModel.find({
-      members: { $in: [currentUserId] },
+      $or: [{ sender: currentUserId }, { receiver: currentUserId }],
     });
 
-    const existingChatUserIds = existingChats.flatMap((chat) =>
-      chat.members
-        .filter((id) => id.toString() !== currentUserId)
-        .map((id) => new mongoose.Types.ObjectId(id))
-    );
+    const existingChatUserIds = new Set();
+    existingChats.forEach((chat) => {
+      if (chat.sender.toString() !== currentUserId) {
+        existingChatUserIds.add(chat.sender.toString());
+      }
+      if (chat.receiver.toString() !== currentUserId) {
+        existingChatUserIds.add(chat.receiver.toString());
+      }
+    });
 
-    const youBlocked = currentUser.blockedUsers.map(
-      (id) => new mongoose.Types.ObjectId(id)
-    );
+    const youBlocked = currentUser.blockedUsers.map((id) => id.toString());
 
     const blockedYouUsers = await userModel
       .find({
-        blockedUsers: currentUser._id,
+        blockedUsers: currentUserId,
       })
       .select("_id");
 
-    const blockedYou = blockedYouUsers.map((user) => user._id);
+    const blockedYou = blockedYouUsers.map((user) => user._id.toString());
 
-    const excludedIds = [
+    const excludedIds = new Set([
+      currentUserId,
       ...youBlocked,
       ...blockedYou,
       ...existingChatUserIds,
-      new mongoose.Types.ObjectId(currentUserId),
-    ];
+    ]);
 
     const potentialUsers = await userModel
       .find({
-        _id: { $nin: excludedIds },
+        _id: { $nin: Array.from(excludedIds) },
       })
-      .select("name email createdAt updatedAt")
-      .sort({ name: 1 });
+      .select("name email createdAt updatedAt");
 
     res.status(200).json(potentialUsers);
   } catch (error) {

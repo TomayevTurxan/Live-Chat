@@ -10,13 +10,20 @@ import {
   Paper,
   CircularProgress,
   LinearProgress,
+  Button,
+  Chip,
 } from "@mui/material";
-import ChatIcon from "@mui/icons-material/Chat";
-import { useCreateChat } from "../../features/mutations";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import { useUser } from "../../context/contexts";
 import { useQueryClient } from "@tanstack/react-query";
 import UserContext from "../../context/UserInfo";
-import { usePotentialChatsUser } from "../../features/queries";
+import {
+  useIncomingChatRequests,
+  usePotentialChatsUser,
+} from "../../features/queries";
+import { useCreateChat } from "../../features/mutations";
 
 const PotentialChats = () => {
   const queryClient = useQueryClient();
@@ -25,29 +32,34 @@ const PotentialChats = () => {
   const { data: potentialChatsUser, isLoading } = usePotentialChatsUser(
     userInfo?._id
   );
-  const [loadingId, setLoadingId] = useState(null);
-  const createChatMutation = useCreateChat();
 
-  const handleCreateChat = (otherUserId) => {
+  const [loadingId, setLoadingId] = useState(null);
+  const createChatRequestMutation = useCreateChat();
+  const incomingRequest = useIncomingChatRequests(userInfo?._id);
+  console.log("incomingRequest", incomingRequest.data);
+  const handleSendChatRequest = (otherUserId) => {
     if (!userInfo?._id || !otherUserId) return;
 
     setLoadingId(otherUserId);
-    createChatMutation.mutate(
+    createChatRequestMutation.mutate(
       {
-        firstId: userInfo._id,
-        secondId: otherUserId,
+        senderId: userInfo._id,
+        receiverId: otherUserId,
       },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries(["userChats"]);
+          queryClient.invalidateQueries(["potentialChatsUser"]);
+          queryClient.invalidateQueries(["chatRequests"]);
           setLoadingId(null);
         },
-        onError: () => {
+        onError: (error) => {
+          console.error("Error sending chat request:", error);
           setLoadingId(null);
         },
       }
     );
   };
+
   if (isLoading) return <LinearProgress />;
 
   if (!potentialChatsUser || potentialChatsUser.length === 0) {
@@ -62,6 +74,8 @@ const PotentialChats = () => {
 
   return (
     <Paper elevation={1} sx={{ m: 2 }}>
+    
+
       <List
         sx={{
           width: "100%",
@@ -73,14 +87,12 @@ const PotentialChats = () => {
         {potentialChatsUser.map((userItem, index) => (
           <ListItem
             key={userItem._id || index}
-            onClick={() => handleCreateChat(userItem._id)}
             sx={{
-              cursor: "pointer",
-              "&:hover": { bgcolor: "action.hover" },
               borderBottom:
                 index < potentialChatsUser.length - 1
                   ? "1px solid #eee"
                   : "none",
+              py: 2,
             }}
           >
             <ListItemAvatar>
@@ -90,15 +102,32 @@ const PotentialChats = () => {
                     ? "2px solid green"
                     : "2px solid transparent",
                   transition: "border 0.3s ease",
+                  width: 48,
+                  height: 48,
                 }}
               >
                 {userItem?.name ? (
                   userItem?.name.charAt(0).toUpperCase()
                 ) : (
-                  <ChatIcon />
+                  <PersonAddIcon />
                 )}
               </Avatar>
+              {onlineUsers?.some((user) => user._id === userItem._id) && (
+                <Chip
+                  label="Online"
+                  size="small"
+                  color="success"
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    fontSize: "0.6rem",
+                    height: 16,
+                  }}
+                />
+              )}
             </ListItemAvatar>
+
             <ListItemText
               primary={
                 <Box
@@ -106,6 +135,7 @@ const PotentialChats = () => {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    mb: 0.5,
                   }}
                 >
                   <Typography
@@ -138,7 +168,12 @@ const PotentialChats = () => {
                     variant="caption"
                     color="text.secondary"
                     component="span"
-                    sx={{ display: "block" }}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mt: 0.5,
+                    }}
                   >
                     Joined{" "}
                     {new Date(userItem?.createdAt).toLocaleDateString("en-US", {
@@ -150,17 +185,23 @@ const PotentialChats = () => {
                 </Box>
               }
             />
-            <Box sx={{ display: "flex", alignItems: "center" }}>
+
+            <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
               {loadingId === userItem?._id ? (
                 <CircularProgress size={24} />
               ) : (
-                <ChatIcon
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<PersonAddIcon />}
+                  onClick={() => handleSendChatRequest(userItem._id)}
                   sx={{
-                    color: "primary.main",
-                    fontSize: 20,
-                    opacity: 0.7,
+                    minWidth: 120,
+                    textTransform: "none",
                   }}
-                />
+                >
+                  Send Request
+                </Button>
               )}
             </Box>
           </ListItem>

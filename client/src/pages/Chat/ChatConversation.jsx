@@ -1,10 +1,9 @@
-import React, { useState, useRef, useContext } from "react";
+import { useState, useRef, useContext } from "react";
 import {
   Box,
   Avatar,
   Typography,
   IconButton,
-  Button,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
@@ -14,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import ChatMessages from "./ChatMessages";
 import UserContext from "../../context/UserInfo";
 import { useUser } from "../../context/contexts";
-import { useRecipientUser } from "../../features/queries";
+import { keys, useRecipientUser } from "../../features/queries";
 import WelcomeBox from "../../components/WelcomeBox";
 import InputEmojiComponent from "../../components/InputEmokji";
 import ChipOnline from "../../components/Chip";
@@ -36,10 +35,12 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const blockUser = useBlockUser();
   const { userInfo } = useUser();
   const { socket } = useContext(UserContext);
-  const recipientId = currentChat?.members?.find((id) => id !== userInfo?._id);
+  const recipientId = currentChat?.members?.find(
+    (member) => member._id !== userInfo?._id
+  );
   const [incomingCallData, setIncomingCallData] = useState(null);
   const { data: recipientUser, isLoading: recipientUserLoading } =
-    useRecipientUser(recipientId);
+    useRecipientUser(recipientId?._id);
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [editMode, setEditMode] = useState(false);
   const [messageBeingEdited, setMessageBeingEdited] = useState(null);
