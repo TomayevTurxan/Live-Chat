@@ -35,6 +35,7 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const blockUser = useBlockUser();
   const { userInfo } = useUser();
   const { socket } = useContext(UserContext);
+
   const recipientId = currentChat?.members?.find(
     (member) => member._id !== userInfo?._id
   );
@@ -120,11 +121,9 @@ const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
       socket.off("callUser", handleIncomingCall);
     };
   }, [socket]);
-
-  if (!currentChat || currentChat.length == 0) {
+  if (!currentChat || !currentChat._id) {
     return <WelcomeBox />;
   }
-
   if (!recipientUser) return null;
 
   return (

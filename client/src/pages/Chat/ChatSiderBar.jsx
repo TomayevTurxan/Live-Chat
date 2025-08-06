@@ -35,7 +35,8 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
     isLoading: loadingChats,
     isError,
   } = useUserChats(userInfo?._id);
-  console.log('userChats',userChats)
+
+  
   const handlePotentialChatsToggle = () => {
     setShowPotentialChats(!showPotentialChats);
   };

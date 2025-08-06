@@ -13,17 +13,24 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
     if (!socket) return;
 
     const handleGetMessage = (res) => {
+      const queryKey = keys.getMessages(res.chatId);
+
+      const prevMessages = queryClient.getQueryData(queryKey);
+
+      if (prevMessages) {
+        queryClient.setQueryData(queryKey, (old = []) => [...old, { ...res }]);
+      } else {
+        queryClient.setQueryData(queryKey, [{ ...res }]);
+      }
+
       if (currentChat?._id === res.chatId) {
-        queryClient.setQueryData(
-          keys.getMessages(currentChat._id),
-          (old = []) => [...old, { ...res }]
-        );
-        messageAudio.play()
+        messageAudio.play();
       } else {
         notificationAudio.play();
         setNotifications((prev) => [res, ...prev]);
       }
 
+      // update lastMessage list
       queryClient.setQueryData(
         keys.getWithLastMessage(userInfo._id),
         (old = []) => {

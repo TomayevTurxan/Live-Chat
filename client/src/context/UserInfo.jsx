@@ -25,32 +25,36 @@ export const UserProvider = ({ children }) => {
 
   //configuration socket
   useEffect(() => {
-    const newSocket = io(import.meta.env.VITE_SOCKET_PORT, {
+    if (!userInfo) return;
+
+    const newSocket = io( import.meta.env.VITE_SOCKET_PORT, {
       transports: ["websocket", "polling"],
       upgrade: true,
       rememberUpgrade: true,
       forceNew: true,
     });
-    if (newSocket) {
-      setSocket(newSocket);
-    }
+
+    setSocket(newSocket);
 
     return () => {
       newSocket.disconnect();
+      setSocket(null);
     };
-  }, []);
+  }, [userInfo]);
 
-  //add online users
   useEffect(() => {
-    if (socket === null) return;
-    socket.emit("addNewUser", userInfo?._id);
+    if (!socket || !userInfo?._id) return;
+
+    socket.emit("addNewUser", userInfo._id);
+
     socket.on("getOnlineUsers", (res) => {
       setOnlineUsers(res);
     });
+
     return () => {
       socket.off("getOnlineUsers");
     };
-  }, [socket]);
+  }, [socket, userInfo]);
 
   const logout = () => {
     setUserInfo(null);
