@@ -32,6 +32,10 @@ export const acceptChatRequestApi = async (requestId) => {
   const response = await axiosInstance.post(`chats/acceptChatRequest/${requestId}`);
   return response.data;
 };
+export const rejectChatRequestApi = async (requestId) => {
+  const response = await axiosInstance.post(`chats/rejectChatRequest/${requestId}`);
+  return response.data;
+};
 export const getInComingChatRequests = async (userId) => {
   const response = await axiosInstance.get(
     `chats/inComingChatRequests/${userId}`

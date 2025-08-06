@@ -51,6 +51,7 @@ const Chat = () => {
           <ChatSidebar
             onChatSelect={handleChatSelect}
             selectedChat={selectedChat}
+            setCurrentChat={setCurrentChat}
           />
         </Box>
 

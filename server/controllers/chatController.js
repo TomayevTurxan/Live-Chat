@@ -2,12 +2,12 @@ const mongoose = require("mongoose");
 const chatModel = require("../models/chatModel");
 const chatRequestModel = require("../models/chatRequestModel");
 const userModel = require("../models/userModel");
+const messageModel = require("../models/messageModel");
 
 const createChatRequest = async (req, res) => {
   const { senderId, receiverId } = req.body;
 
   try {
-    // Check if chat already exists
     const existingChat = await chatModel.findOne({
       members: { $all: [senderId, receiverId] },
     });
@@ -16,7 +16,6 @@ const createChatRequest = async (req, res) => {
       return res.status(400).json({ message: "Chat already exists." });
     }
 
-    // Check if request already exists
     const existingRequest = await chatRequestModel.findOne({
       $or: [
         { sender: senderId, receiver: receiverId },
@@ -50,15 +49,11 @@ const createChatRequest = async (req, res) => {
   }
 };
 
-const ChatRequest = require("../models/chatRequestModel");
-const Chat = require("../models/chatModel");
-const messageModel = require("../models/messageModel");
-
 const acceptChatRequest = async (req, res) => {
   const requestId = req.params.requestId;
 
   try {
-    const request = await ChatRequest.findById(requestId);
+    const request = await chatRequestModel.findById(requestId);
 
     if (!request) {
       return res.status(404).json({ message: "Chat request not found" });
@@ -67,24 +62,41 @@ const acceptChatRequest = async (req, res) => {
     const senderId = request.sender.toString();
     const receiverId = request.receiver.toString();
 
-    // Check if chat already exists
-    const existingChat = await Chat.findOne({
+    const existingChat = await chatModel.findOne({
       members: { $all: [senderId, receiverId] },
     });
 
     if (!existingChat) {
-      await Chat.create({
+      await chatModel.create({
         members: [senderId, receiverId],
       });
     }
 
-    // Delete the request after accepting
-    await ChatRequest.findByIdAndDelete(requestId);
+    await chatRequestModel.findByIdAndDelete(requestId);
 
     res.status(200).json({ message: "Chat request accepted and chat created" });
   } catch (error) {
     console.error("Error accepting chat request:", error);
     res.status(500).json({ message: "Failed to accept chat request", error });
+  }
+};
+
+const rejectChatRequest = async (req, res) => {
+  const requestId = req.params.requestId;
+
+  try {
+    const request = await chatRequestModel.findById(requestId);
+
+    if (!request) {
+      return res.status(404).json({ message: "Chat request not found" });
+    }
+
+    await chatRequestModel.findByIdAndDelete(requestId);
+
+    res.status(200).json({ message: "Chat request rejected successfully" });
+  } catch (error) {
+    console.error("Error rejecting chat request:", error);
+    res.status(500).json({ message: "Failed to reject chat request", error });
   }
 };
 
@@ -154,7 +166,6 @@ const findUserChatsWithLastMessage = async (req, res) => {
   const userId = req.params.userId;
 
   try {
-    // 1. İstifadəçinin daxil olduğu chat-ləri al
     const chats = await chatModel.find({ members: userId }).populate({
       path: "members",
       select: "name email _id",
@@ -163,15 +174,12 @@ const findUserChatsWithLastMessage = async (req, res) => {
     const result = [];
 
     for (const chat of chats) {
-      // 2. Hər bir chat üçün sonuncu mesajı tap
       const lastMessage = await messageModel
         .findOne({ chatId: chat._id.toString() })
         .sort({ createdAt: -1 });
 
-      // 3. Qarşı tərəfdəki user-i tap (chat.members-də userId olmayan)
       const otherUser = chat.members.find((m) => m._id.toString() !== userId);
 
-      // 4. Cavaba əlavə et
       result.push({
         chatId: chat._id,
         members: chat.members,
@@ -196,4 +204,5 @@ module.exports = {
   findUserChatsWithLastMessage,
   acceptChatRequest,
   inComingChatRequests,
+  rejectChatRequest,
 };

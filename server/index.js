@@ -90,6 +90,12 @@ io.on("connection", (socket) => {
   });
   socket.on("markAsRead", async ({ chatId, userId }) => {
     try {
+      // Verify user is member of the chat
+      const chat = await chatModel.findById(chatId);
+      if (!chat || !chat.members.includes(userId)) {
+        return;
+      }
+
       const result = await messageModel.updateMany(
         {
           chatId,
@@ -99,20 +105,25 @@ io.on("connection", (socket) => {
         { $set: { isRead: true } }
       );
 
-      const senderUsers = onlineUsers.filter((u) => u.userId !== userId);
-
-      senderUsers.forEach((user) => {
-        io.to(user.socketId).emit("getMessagesRead", { chatId });
+      chat.members.forEach((memberId) => {
+        const user = onlineUsers.find((u) => u.userId === memberId.toString());
+        if (user) {
+          io.to(user.socketId).emit("getMessagesRead", { chatId });
+        }
       });
     } catch (error) {
       console.error("markAsRead error:", error);
     }
   });
 
-  // Delete Message
   socket.on("deleteMessage", async ({ messageId, chatId }) => {
     try {
-      await messageModel.findByIdAndDelete(messageId);
+      const deletedMessage = await messageModel.findByIdAndDelete(messageId);
+
+      if (!deletedMessage) {
+        return;
+      }
+
       const senderSocketId = socket.id;
       onlineUsers.forEach((user) => {
         if (user.socketId !== senderSocketId) {
@@ -131,7 +142,6 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("callEnded");
   });
 
-  // Edit Message
   socket.on("editMessage", async ({ messageId, text, chatId }) => {
     try {
       const updatedMessage = await messageModel.findByIdAndUpdate(

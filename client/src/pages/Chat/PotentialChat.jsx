@@ -19,10 +19,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useUser } from "../../context/contexts";
 import { useQueryClient } from "@tanstack/react-query";
 import UserContext from "../../context/UserInfo";
-import {
-  useIncomingChatRequests,
-  usePotentialChatsUser,
-} from "../../features/queries";
+import { usePotentialChatsUser } from "../../features/queries";
 import { useCreateChat } from "../../features/mutations";
 
 const PotentialChats = () => {
@@ -33,14 +30,11 @@ const PotentialChats = () => {
     userInfo?._id
   );
 
-  const [loadingId, setLoadingId] = useState(null);
   const createChatRequestMutation = useCreateChat();
-  const incomingRequest = useIncomingChatRequests(userInfo?._id);
-  console.log("incomingRequest", incomingRequest.data);
+
   const handleSendChatRequest = (otherUserId) => {
     if (!userInfo?._id || !otherUserId) return;
 
-    setLoadingId(otherUserId);
     createChatRequestMutation.mutate(
       {
         senderId: userInfo._id,
@@ -50,16 +44,13 @@ const PotentialChats = () => {
         onSuccess: () => {
           queryClient.invalidateQueries(["potentialChatsUser"]);
           queryClient.invalidateQueries(["chatRequests"]);
-          setLoadingId(null);
         },
         onError: (error) => {
           console.error("Error sending chat request:", error);
-          setLoadingId(null);
         },
       }
     );
   };
-
   if (isLoading) return <LinearProgress />;
 
   if (!potentialChatsUser || potentialChatsUser.length === 0) {
@@ -74,8 +65,6 @@ const PotentialChats = () => {
 
   return (
     <Paper elevation={1} sx={{ m: 2 }}>
-    
-
       <List
         sx={{
           width: "100%",
@@ -187,18 +176,14 @@ const PotentialChats = () => {
             />
 
             <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
-              {loadingId === userItem?._id ? (
-                <CircularProgress size={24} />
+              {userItem?.requestStatus === "pending" ? (
+                <Chip label="Pending" color="warning" size="small" />
               ) : (
                 <Button
                   variant="contained"
                   size="small"
                   startIcon={<PersonAddIcon />}
                   onClick={() => handleSendChatRequest(userItem._id)}
-                  sx={{
-                    minWidth: 120,
-                    textTransform: "none",
-                  }}
                 >
                   Send Request
                 </Button>

@@ -22,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 import IncomingRequests from "./IncomingRequests";
 import { useUserChats } from "../../features/queries";
 
-const ChatSidebar = ({ onChatSelect, selectedChat }) => {
+const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { userInfo, logout } = useUser();
@@ -35,7 +35,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
     isLoading: loadingChats,
     isError,
   } = useUserChats(userInfo?._id);
-
+  console.log('userChats',userChats)
   const handlePotentialChatsToggle = () => {
     setShowPotentialChats(!showPotentialChats);
   };
@@ -54,9 +54,8 @@ const ChatSidebar = ({ onChatSelect, selectedChat }) => {
     if (socket) {
       socket.disconnect();
     }
-
     queryClient.clear();
-
+    setCurrentChat(null);
     logout();
     navigate("/login");
   };

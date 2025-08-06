@@ -16,20 +16,14 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
       if (currentChat?._id === res.chatId) {
         queryClient.setQueryData(
           keys.getMessages(currentChat._id),
-          (old = []) => [...old, { ...res, isRead: true }]
+          (old = []) => [...old, { ...res }]
         );
-
-        socket.emit("markAsRead", {
-          chatId: currentChat._id,
-          userId: userInfo._id,
-        });
+        messageAudio.play()
       } else {
+        notificationAudio.play();
         setNotifications((prev) => [res, ...prev]);
       }
 
-      messageAudio.play();
-
-      // ✅ withLastMessages cache-i yenilə
       queryClient.setQueryData(
         keys.getWithLastMessage(userInfo._id),
         (old = []) => {
@@ -49,7 +43,7 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
           if (!exists) {
             updated.push({
               chatId: res.chatId,
-              members: [res.senderId, userInfo._id], // əgər varsa dəyiş
+              members: [res.senderId, userInfo._id],
               lastMessage: { ...res, isRead: currentChat?._id === res.chatId },
             });
           }
@@ -57,15 +51,6 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
           return updated;
         }
       );
-    };
-
-    const handleGetNotification = (res) => {
-      const isChatOpen = currentChat?._id === res.chatId;
-      if (isChatOpen) {
-        return;
-      }
-      setNotifications((prev) => [res, ...prev]);
-      notificationAudio.play();
     };
 
     const handleGetMessagesRead = ({ chatId }) => {
@@ -104,14 +89,14 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
       });
     };
     socket.on("getMessage", handleGetMessage);
-    socket.on("getNotification", handleGetNotification);
+    // socket.on("getNotification", handleGetNotification);
     socket.on("getMessagesRead", handleGetMessagesRead);
     socket.on("messageDeleted", handleDeleteMessage);
     socket.on("messageEdited", handleMessageEdited);
 
     return () => {
       socket.off("getMessage", handleGetMessage);
-      socket.off("getNotification", handleGetNotification);
+      // socket.off("getNotification", handleGetNotification);
       socket.off("getMessagesRead", handleGetMessagesRead);
       socket.off("messageDeleted", handleDeleteMessage);
       socket.off("messageEdited", handleMessageEdited);
@@ -120,11 +105,6 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
 
   useEffect(() => {
     if (!socket || !currentChat || !userInfo) return;
-
-    socket.emit("markAsRead", {
-      chatId: currentChat._id,
-      userId: userInfo._id,
-    });
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {

@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import ChatMessages from "./ChatMessages";
 import UserContext from "../../context/UserInfo";
 import { useUser } from "../../context/contexts";
-import { keys, useRecipientUser } from "../../features/queries";
+import { useRecipientUser } from "../../features/queries";
 import WelcomeBox from "../../components/WelcomeBox";
 import InputEmojiComponent from "../../components/InputEmokji";
 import ChipOnline from "../../components/Chip";

@@ -7,10 +7,12 @@ const {
   findUserChatsWithLastMessage,
   acceptChatRequest,
   inComingChatRequests,
+  rejectChatRequest
 } = require("../controllers/chatController");
 
 router.post("/", createChatRequest);
 router.post("/acceptChatRequest/:requestId", acceptChatRequest);
+router.post("/rejectChatRequest/:requestId", rejectChatRequest);
 router.get("/inComingChatRequests/:userId", inComingChatRequests);
 router.get("/:userId", findUserChats);
 router.get("/findChat/:firstId/:secondId", findChat);

@@ -15,19 +15,21 @@ import {
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonIcon from "@mui/icons-material/Person";
-import { useIncomingChatRequests } from "../../features/queries";
-// import { useAcceptChatRequest, useRejectChatRequest } from "../../features/mutations";
+import { useIncomingChatRequests, useUserChats } from "../../features/queries";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAcceptChatRequest } from "../../features/mutations";
+import {
+  useAcceptChatRequest,
+  useRejectChatRequest,
+} from "../../features/mutations";
 
 const IncomingRequests = ({ userInfo }) => {
   const queryClient = useQueryClient();
   const { data, isLoading } = useIncomingChatRequests(userInfo?._id);
   const [loadingId, setLoadingId] = useState(null);
   const [actionType, setActionType] = useState(null);
-
+  const { refetch: refetchUserChats } = useUserChats(userInfo?._id);
   const acceptMutation = useAcceptChatRequest();
-  //   const rejectMutation = useRejectChatRequest();
+  const rejectMutation = useRejectChatRequest();
 
   const handleAcceptRequest = (requestId) => {
     setLoadingId(requestId);
@@ -35,8 +37,9 @@ const IncomingRequests = ({ userInfo }) => {
 
     acceptMutation.mutate(requestId, {
       onSuccess: () => {
+        // queryClient.invalidateQueries([keys.getUserChats(userInfo._id)]);
+        refetchUserChats();
         queryClient.invalidateQueries(["incomingChatRequests"]);
-        queryClient.invalidateQueries(["userChats"]); 
         setLoadingId(null);
         setActionType(null);
       },
@@ -48,23 +51,23 @@ const IncomingRequests = ({ userInfo }) => {
     });
   };
 
-  //   const handleRejectRequest = (requestId) => {
-  //     setLoadingId(requestId);
-  //     setActionType('reject');
+  const handleRejectRequest = (requestId) => {
+    setLoadingId(requestId);
+    setActionType("reject");
 
-  //     rejectMutation.mutate(requestId, {
-  //       onSuccess: () => {
-  //         queryClient.invalidateQueries(["incomingChatRequests"]);
-  //         setLoadingId(null);
-  //         setActionType(null);
-  //       },
-  //       onError: (error) => {
-  //         console.error("Error rejecting chat request:", error);
-  //         setLoadingId(null);
-  //         setActionType(null);
-  //       },
-  //     });
-  //   };
+    rejectMutation.mutate(requestId, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["incomingChatRequests"]);
+        setLoadingId(null);
+        setActionType(null);
+      },
+      onError: (error) => {
+        console.error("Error rejecting chat request:", error);
+        setLoadingId(null);
+        setActionType(null);
+      },
+    });
+  };
 
   if (isLoading) return <CircularProgress sx={{ m: 2 }} />;
 
@@ -163,7 +166,7 @@ const IncomingRequests = ({ userInfo }) => {
                     color="error"
                     size="small"
                     startIcon={<CloseIcon />}
-                    // onClick={() => handleRejectRequest(req._id)}
+                    onClick={() => handleRejectRequest(req._id)}
                     sx={{
                       minWidth: 90,
                       textTransform: "none",

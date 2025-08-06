@@ -8,6 +8,7 @@ import {
   deleteMessage,
   editMessage,
   acceptChatRequestApi,
+  rejectChatRequestApi,
 } from "../api";
 
 export const useRegister = () => {
@@ -37,6 +38,13 @@ export const useAcceptChatRequest = () => {
   });
 };
 
+export const useRejectChatRequest = () => {
+  return useMutation({
+    mutationFn: (requestId) => {
+      return rejectChatRequestApi(requestId);
+    },
+  });
+};
 export const usePostMessage = () => {
   return useMutation({
     mutationFn: (data) => {

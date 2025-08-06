@@ -4,6 +4,7 @@ const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const chatModel = require("../models/chatModel");
 const mongoose = require("mongoose");
+const chatRequestModel = require("../models/chatRequestModel");
 
 const createToken = (_id) => {
   const jwtkEY = process.env.JWT_SECRET_KEY;
@@ -117,30 +118,28 @@ const getPotentialChatsUser = async (req, res) => {
     const currentUser = await userModel
       .findById(currentUserId)
       .select("blockedUsers");
+
     if (!currentUser) {
       return res.status(404).json("Current user not found.");
     }
 
     const existingChats = await chatModel.find({
-      $or: [{ sender: currentUserId }, { receiver: currentUserId }],
+      members: { $in: [currentUserId] },
     });
 
     const existingChatUserIds = new Set();
     existingChats.forEach((chat) => {
-      if (chat.sender.toString() !== currentUserId) {
-        existingChatUserIds.add(chat.sender.toString());
-      }
-      if (chat.receiver.toString() !== currentUserId) {
-        existingChatUserIds.add(chat.receiver.toString());
-      }
+      chat.members.forEach((memberId) => {
+        if (memberId.toString() !== currentUserId) {
+          existingChatUserIds.add(memberId.toString());
+        }
+      });
     });
 
     const youBlocked = currentUser.blockedUsers.map((id) => id.toString());
 
     const blockedYouUsers = await userModel
-      .find({
-        blockedUsers: currentUserId,
-      })
+      .find({ blockedUsers: currentUserId })
       .select("_id");
 
     const blockedYou = blockedYouUsers.map((user) => user._id.toString());
@@ -153,12 +152,34 @@ const getPotentialChatsUser = async (req, res) => {
     ]);
 
     const potentialUsers = await userModel
-      .find({
-        _id: { $nin: Array.from(excludedIds) },
-      })
+      .find({ _id: { $nin: Array.from(excludedIds) } })
       .select("name email createdAt updatedAt");
 
-    res.status(200).json(potentialUsers);
+    // ✅ Chat request status əlavə et
+    const pendingRequests = await chatRequestModel.find({
+      $or: [{ sender: currentUserId }, { receiver: currentUserId }],
+    });
+
+    const pendingMap = new Map();
+
+    pendingRequests.forEach((req) => {
+      const otherUserId =
+        req.sender.toString() === currentUserId
+          ? req.receiver.toString()
+          : req.sender.toString();
+
+      pendingMap.set(otherUserId, req.status); // e.g., "pending"
+    });
+
+    const enrichedUsers = potentialUsers.map((user) => {
+      const status = pendingMap.get(user._id.toString()) || null;
+      return {
+        ...user.toObject(),
+        requestStatus: status, // "pending" or null
+      };
+    });
+
+    res.status(200).json(enrichedUsers);
   } catch (error) {
     console.error("Error fetching potential chats:", error);
     res.status(500).json({

@@ -25,7 +25,7 @@ export const UserProvider = ({ children }) => {
 
   //configuration socket
   useEffect(() => {
-    const newSocket = io( "http://localhost:3000", {
+    const newSocket = io(import.meta.env.VITE_SOCKET_PORT, {
       transports: ["websocket", "polling"],
       upgrade: true,
       rememberUpgrade: true,
@@ -56,6 +56,7 @@ export const UserProvider = ({ children }) => {
     setUserInfo(null);
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
+    localStorage.removeItem("currentChat");
   };
   return (
     <UserContext.Provider

@@ -13,11 +13,13 @@ import {
 } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { useChatData } from "../../context/contexts";
+import { useAllUsers } from "../../features/queries";
 
 const Notification = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { allUsers, notifications, setNotifications } = useChatData();
+  const { notifications, setNotifications } = useChatData();
+  const { data: allUsers } = useAllUsers();
   const open = Boolean(anchorEl);
   const unread = notifications?.filter((n) => !n.isRead) || [];
   const read = notifications?.filter((n) => n.isRead) || [];
@@ -167,7 +169,7 @@ const Notification = () => {
         onClose={() => setDrawerOpen(false)}
         slotProps={{
           paper: {
-            sx: { width: 300 }, 
+            sx: { width: 300 },
           },
         }}
       >
