@@ -24,14 +24,13 @@ const InputEmojiComponent = ({
   return (
     <Box
       sx={{
-        p: { xs: 1, md: 2 },
+        p: { xs: 1, md: 1.3 },
         borderTop: "1px solid",
         borderColor: "divider",
         backgroundColor: "background.paper",
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        gap: 1,
       }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>

@@ -36,8 +36,7 @@ const MessagesList = ({ userInfo, currentChat, onEditMessage }) => {
         display: "flex",
         flexDirection: "column",
         gap: 1,
-        pr: 4,
-        pl: 4,
+        p: 4,
       }}
     >
       {messages?.map((msg) => (

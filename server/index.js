@@ -90,7 +90,6 @@ io.on("connection", (socket) => {
   });
   socket.on("markAsRead", async ({ chatId, userId }) => {
     try {
-      // Verify user is member of the chat
       const chat = await chatModel.findById(chatId);
       if (!chat || !chat.members.includes(userId)) {
         return;

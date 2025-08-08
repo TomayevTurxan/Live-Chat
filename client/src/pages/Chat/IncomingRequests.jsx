@@ -31,38 +31,24 @@ const IncomingRequests = ({ userInfo }) => {
   const acceptMutation = useAcceptChatRequest();
   const rejectMutation = useRejectChatRequest();
 
-  const handleAcceptRequest = (requestId) => {
+  const handleAction = (requestId, action) => {
     setLoadingId(requestId);
-    setActionType("accept");
+    setActionType(action);
 
-    acceptMutation.mutate(requestId, {
+    const mutation = action === "accept" ? acceptMutation : rejectMutation;
+
+    mutation.mutate(requestId, {
       onSuccess: () => {
-        // queryClient.invalidateQueries([keys.getUserChats(userInfo._id)]);
-        refetchUserChats();
+        if (action === "accept") {
+          refetchUserChats();
+        }
+
         queryClient.invalidateQueries(["incomingChatRequests"]);
-        setLoadingId(null);
-        setActionType(null);
       },
       onError: (error) => {
-        console.error("Error accepting chat request:", error);
-        setLoadingId(null);
-        setActionType(null);
+        console.error(`Error ${action}ing chat request:`, error);
       },
-    });
-  };
-
-  const handleRejectRequest = (requestId) => {
-    setLoadingId(requestId);
-    setActionType("reject");
-
-    rejectMutation.mutate(requestId, {
-      onSuccess: () => {
-        queryClient.invalidateQueries(["incomingChatRequests"]);
-        setLoadingId(null);
-        setActionType(null);
-      },
-      onError: (error) => {
-        console.error("Error rejecting chat request:", error);
+      onSettled: () => {
         setLoadingId(null);
         setActionType(null);
       },
@@ -124,14 +110,7 @@ const IncomingRequests = ({ userInfo }) => {
                     {req.sender?.email || "No email provided"}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Requested on{" "}
-                    {new Date(req.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    Requested on ...
                   </Typography>
                 </Box>
               }
@@ -152,7 +131,7 @@ const IncomingRequests = ({ userInfo }) => {
                     color="success"
                     size="small"
                     startIcon={<CheckIcon />}
-                    onClick={() => handleAcceptRequest(req._id)}
+                    onClick={() => handleAction(req._id, "accept")}
                     sx={{
                       minWidth: 90,
                       textTransform: "none",
@@ -166,7 +145,7 @@ const IncomingRequests = ({ userInfo }) => {
                     color="error"
                     size="small"
                     startIcon={<CloseIcon />}
-                    onClick={() => handleRejectRequest(req._id)}
+                    onClick={() => handleAction(req._id, "reject")}
                     sx={{
                       minWidth: 90,
                       textTransform: "none",

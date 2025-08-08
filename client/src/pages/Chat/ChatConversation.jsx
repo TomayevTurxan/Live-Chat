@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import ChatMessages from "./ChatMessages";
 import UserContext from "../../context/UserInfo";
 import { useUser } from "../../context/contexts";
-import { useRecipientUser } from "../../features/queries";
+import { keys, useRecipientUser } from "../../features/queries";
 import WelcomeBox from "../../components/WelcomeBox";
 import InputEmojiComponent from "../../components/InputEmokji";
 import ChipOnline from "../../components/Chip";
@@ -24,6 +24,7 @@ import VideoCall from "./VideoCall";
 import { useEffect } from "react";
 import { useBlockUser } from "../../features/mutations";
 import UserDetail from "./UserDetail";
+import { updateLastMessagesCache } from "../../hooks/updateLastMessagesCache";
 
 const ChatConversation = ({ currentChat, onBackToChats, onMenuToggle }) => {
   const navigate = useNavigate();

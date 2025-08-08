@@ -60,6 +60,8 @@ export function useUserChats(userId) {
     queryKey: keys.getUserChats(userId),
     queryFn: () => getUserChatsApi(userId),
     enabled: !!userId,
+    refetchIntervalInBackground: true, 
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -100,8 +102,8 @@ export function usePotentialChatsUser(userId) {
   });
 }
 
-export function useIncomingChatRequests(userId){
-   return useQuery({
+export function useIncomingChatRequests(userId) {
+  return useQuery({
     queryKey: keys.getIncomingChatRequests(userId),
     queryFn: () => getInComingChatRequests(userId),
   });

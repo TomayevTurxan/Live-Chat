@@ -11,8 +11,19 @@ import {
   Button,
   Badge,
   Chip,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
 } from "@mui/material";
-import { PersonAdd, Close, Logout, MailOutline } from "@mui/icons-material";
+import {
+  PersonAdd,
+  Close,
+  Logout,
+  MailOutline,
+  Menu as MenuIcon,
+} from "@mui/icons-material";
 import UserChat from "./UserChat";
 import PotentialChats from "./PotentialChat";
 import { useUser } from "../../context/contexts";
@@ -20,7 +31,7 @@ import UserContext from "../../context/UserInfo";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import IncomingRequests from "./IncomingRequests";
-import { useUserChats } from "../../features/queries";
+import { useIncomingChatRequests, useUserChats } from "../../features/queries";
 
 const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
   const queryClient = useQueryClient();
@@ -30,18 +41,31 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
   const [showPotentialChats, setShowPotentialChats] = useState(false);
   const [showIncomingRequests, setShowIncomingRequests] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [anchorEl, setAnchorEl] = useState(null);
   const {
     data: userChats,
     isLoading: loadingChats,
     isError,
   } = useUserChats(userInfo?._id);
 
-  
+  const { data: incomingRequests } = useIncomingChatRequests(userInfo?._id);
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   const handlePotentialChatsToggle = () => {
     setShowPotentialChats(!showPotentialChats);
+    handleMenuClose();
   };
+
   const handleIncomingRequestsToggle = () => {
     setShowIncomingRequests((prev) => !prev);
+    handleMenuClose();
   };
 
   const handleChatSelect = (chat) => {
@@ -51,6 +75,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
+
   const handleLogout = () => {
     if (socket) {
       socket.disconnect();
@@ -70,6 +95,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
       otherUser?.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
+
   if (loadingChats) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" p={2}>
@@ -89,6 +115,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
       </Box>
     );
   }
+
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Box p={2}>
@@ -99,40 +126,26 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
           flexWrap="wrap"
           gap={1}
         >
-          <Typography variant="h6" sx={{ flexShrink: 0 }}>
-            Live Chat
-          </Typography>
-          <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-            <Typography
-              variant="body2"
-              sx={{
-                display: { xs: "none", sm: "block" },
-                fontSize: { sm: "0.75rem", md: "0.875rem" },
-              }}
-            >
-              Welcome, {userInfo?.name}!
+          <Box display="flex" alignItems="center" gap={1}>
+            <Tooltip title="Menu">
+              <IconButton onClick={handleMenuOpen} color="primary" size="small">
+                <MenuIcon />
+              </IconButton>
+            </Tooltip>
+            <Typography variant="h6" sx={{ flexShrink: 0 }}>
+              Live Chat
             </Typography>
-            <Tooltip title="Find new people to chat">
-              <IconButton
-                onClick={handlePotentialChatsToggle}
-                color="primary"
-                size="small"
-              >
-                <PersonAdd />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Incoming Chat Requests">
-              <IconButton
-                onClick={handleIncomingRequestsToggle}
-                color="primary"
-                size="small"
-              >
-                <Badge color="error" max={99}>
-                  <MailOutline />
-                </Badge>
-              </IconButton>
-            </Tooltip>
           </Box>
+
+          <Typography
+            variant="body2"
+            sx={{
+              display: { xs: "none", sm: "block" },
+              fontSize: { sm: "0.75rem", md: "0.875rem" },
+            }}
+          >
+            Welcome, {userInfo?.name}!
+          </Typography>
         </Box>
 
         <TextField
@@ -144,6 +157,41 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
           sx={{ mt: 2 }}
         />
       </Box>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        transformOrigin={{ horizontal: "left", vertical: "top" }}
+        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
+      >
+        <MenuItem onClick={handlePotentialChatsToggle}>
+          <ListItemIcon>
+            <PersonAdd color="primary" />
+          </ListItemIcon>
+          <ListItemText
+            primary="Find new people"
+            secondary="Start new conversations"
+          />
+        </MenuItem>
+
+        <MenuItem onClick={handleIncomingRequestsToggle}>
+          <ListItemIcon>
+            <Badge
+              color="error"
+              badgeContent={incomingRequests?.length}
+              max={99}
+              invisible={incomingRequests?.length === 0}
+            >
+              <MailOutline color="primary" />
+            </Badge>
+          </ListItemIcon>
+          <ListItemText
+            primary="Chat requests"
+            secondary="View incoming requests"
+          />
+        </MenuItem>
+      </Menu>
 
       <List sx={{ flex: 1, overflow: "auto", px: 1 }}>
         {filteredChats?.length > 0 ? (
@@ -235,7 +283,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
       >
         <Paper
           sx={{
-            width: "450px",
+            width: "650px",
             overflow: "auto",
             outline: "none",
           }}
@@ -265,6 +313,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
           <PotentialChats />
         </Paper>
       </Modal>
+
       <Modal
         open={showIncomingRequests}
         onClose={handleIncomingRequestsToggle}

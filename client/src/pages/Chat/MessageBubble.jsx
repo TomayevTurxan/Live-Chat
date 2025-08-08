@@ -19,14 +19,12 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useContext, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { keys } from "../../features/queries";
 import UserContext from "../../context/UserInfo";
 
 const MessageBubble = ({
   message,
   isMyMessage,
   formatTime,
-  userInfo,
   onEditMessage,
 }) => {
   const queryClient = useQueryClient();
@@ -49,9 +47,6 @@ const MessageBubble = ({
       socket.emit("deleteMessage", {
         messageId: message._id,
         chatId: message.chatId,
-      });
-      queryClient.invalidateQueries({
-        queryKey: keys.getWithLastMessage(userInfo._id),
       });
       queryClient.invalidateQueries(["messages"]);
     } catch (error) {

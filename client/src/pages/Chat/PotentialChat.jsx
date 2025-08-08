@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useContext } from "react";
 import {
   Avatar,
   Box,
@@ -8,14 +8,11 @@ import {
   ListItemAvatar,
   ListItemText,
   Paper,
-  CircularProgress,
   LinearProgress,
   Button,
   Chip,
 } from "@mui/material";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import { useUser } from "../../context/contexts";
 import { useQueryClient } from "@tanstack/react-query";
 import UserContext from "../../context/UserInfo";
@@ -134,13 +131,6 @@ const PotentialChats = () => {
                   >
                     {userItem?.name || "Unknown User"}
                   </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    component="span"
-                  >
-                    {new Date(userItem?.createdAt).toLocaleDateString()}
-                  </Typography>
                 </Box>
               }
               secondary={
@@ -177,7 +167,7 @@ const PotentialChats = () => {
 
             <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
               {userItem?.requestStatus === "pending" ? (
-                <Chip label="Pending" color="warning" size="small" />
+                <Chip label="Pending" color="warning" size="medium" />
               ) : (
                 <Button
                   variant="contained"
