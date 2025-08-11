@@ -23,12 +23,6 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
         queryClient.setQueryData(queryKey, [{ ...res }]);
       }
 
-      if (currentChat?._id === res.chatId) {
-        messageAudio.play();
-      } else {
-        notificationAudio.play();
-        setNotifications((prev) => [res, ...prev]);
-      }
       queryClient.invalidateQueries({
         queryKey: keys.getWithLastMessage(userInfo._id),
       });
@@ -64,20 +58,28 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
         queryKey: keys.getWithLastMessage(userInfo._id),
       });
     };
+    const handleGetNotification = (res) => {
+      if (currentChat?._id === res.chatId) {
+        messageAudio.play();
+      } else {
+        notificationAudio.play();
+        setNotifications((prev) => [res, ...prev]);
+      }
+    };
     socket.on("getMessage", handleGetMessage);
-    // socket.on("getNotification", handleGetNotification);
+    socket.on("getNotification", handleGetNotification);
     socket.on("getMessagesRead", handleGetMessagesRead);
     socket.on("messageDeleted", handleDeleteMessage);
     socket.on("messageEdited", handleMessageEdited);
 
     return () => {
       socket.off("getMessage", handleGetMessage);
-      // socket.off("getNotification", handleGetNotification);
+      socket.off("getNotification", handleGetNotification);
       socket.off("getMessagesRead", handleGetMessagesRead);
       socket.off("messageDeleted", handleDeleteMessage);
       socket.off("messageEdited", handleMessageEdited);
     };
-  }, [userInfo, socket, queryClient]);
+  }, [userInfo, socket, queryClient,currentChat,userInfo]);
 
   useEffect(() => {
     if (!socket || !currentChat || !userInfo) return;

@@ -12,13 +12,11 @@ const useNotificationHandler = (
   }, [currentChat]);
 
   const handleIsReadNotification = () => {
-    const updatedNotifications = notifications.map((notif) => {
-      if (notif.chatId === currentChat._id) {
-        return { ...notif, isRead: true };
-      }
-      return notif;
-    });
-    setNotifications(updatedNotifications);
+    setNotifications((prev) =>
+      prev.map((notif) =>
+        notif.chatId === currentChat._id ? { ...notif, isRead: true } : notif
+      )
+    );
   };
 
   return { handleIsReadNotification };

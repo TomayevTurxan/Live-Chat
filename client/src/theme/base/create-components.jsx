@@ -295,7 +295,6 @@ export const createComponents = () => {
     MuiPaper: {
       styleOverrides: {
         root: (...args) => {
-          console.log(args[0].theme.palette.mode);
           const theme = args[0].theme;
 
           return {

@@ -25,7 +25,6 @@ const MessageBubble = ({
   message,
   isMyMessage,
   formatTime,
-  onEditMessage,
 }) => {
   const queryClient = useQueryClient();
   const [isHovered, setIsHovered] = useState(false);
@@ -58,22 +57,18 @@ const MessageBubble = ({
     {
       icon: <InfoOutlinedIcon />,
       text: "Message info",
-      action: () => console.log("Message info"),
     },
     {
       icon: <EditIcon />,
       text: "Edit",
-      action: () => onEditMessage(message),
     },
     {
       icon: <ContentCopyIcon />,
       text: "Copy",
-      action: () => navigator.clipboard.writeText(message.text),
     },
     {
       icon: <EmojiEmotionsOutlinedIcon />,
       text: "React",
-      action: () => console.log("React"),
     },
     {
       icon: <DeleteOutlineIcon fontSize="small" />,

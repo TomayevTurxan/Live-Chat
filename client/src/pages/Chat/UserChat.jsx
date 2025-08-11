@@ -23,7 +23,7 @@ const UserChat = ({ chat, user }) => {
   const unreadCount = notifications?.filter(
     (n) => n?.senderId === recipientUser?._id && !n?.isRead
   ).length;
-
+  
   if (!recipientUser) return null;
 
   return (
