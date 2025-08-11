@@ -7,7 +7,6 @@ import {
   ListItemIcon,
   ListItemText,
   Fade,
-  CircularProgress,
 } from "@mui/material";
 import DoneIcon from "@mui/icons-material/Done";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
@@ -25,6 +24,7 @@ const MessageBubble = ({
   message,
   isMyMessage,
   formatTime,
+  onEditMessage,
 }) => {
   const queryClient = useQueryClient();
   const [isHovered, setIsHovered] = useState(false);
@@ -61,10 +61,12 @@ const MessageBubble = ({
     {
       icon: <EditIcon />,
       text: "Edit",
+      action: () => onEditMessage(message),
     },
     {
       icon: <ContentCopyIcon />,
       text: "Copy",
+      action: () => navigator.clipboard.writeText(message.text),
     },
     {
       icon: <EmojiEmotionsOutlinedIcon />,
@@ -133,7 +135,7 @@ const MessageBubble = ({
             pr: 7,
           }}
         >
-          {message.text}
+          {message?.text}
         </Typography>
         {isMyMessage && (
           <Fade in={isHovered} timeout={200}>
@@ -211,7 +213,6 @@ const MessageBubble = ({
           <MenuItem
             key={index}
             onClick={() => {
-              item.action();
               if (!item?.isDelete) {
                 handleMenuClose();
               }

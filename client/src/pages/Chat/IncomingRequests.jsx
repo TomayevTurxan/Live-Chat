@@ -42,11 +42,7 @@ const IncomingRequests = ({ userInfo }) => {
         if (action === "accept") {
           refetchUserChats();
         }
-
         queryClient.invalidateQueries(["incomingChatRequests"]);
-      },
-      onError: (error) => {
-        console.error(`Error ${action}ing chat request:`, error);
       },
       onSettled: () => {
         setLoadingId(null);
@@ -73,12 +69,12 @@ const IncomingRequests = ({ userInfo }) => {
   return (
     <Paper elevation={1} sx={{ m: 2 }}>
       <List sx={{ maxHeight: 400, overflow: "auto" }}>
-        {data.map((req, index) => (
+        {data?.map((req, index) => (
           <ListItem
-            key={req._id}
+            key={req?._id}
             sx={{
               borderBottom:
-                index < data.length - 1 ? "1px solid #f0f0f0" : "none",
+                index < data?.length - 1 ? "1px solid #f0f0f0" : "none",
               py: 2,
             }}
           >
@@ -131,7 +127,7 @@ const IncomingRequests = ({ userInfo }) => {
                     color="success"
                     size="small"
                     startIcon={<CheckIcon />}
-                    onClick={() => handleAction(req._id, "accept")}
+                    onClick={() => handleAction(req?._id, "accept")}
                     sx={{
                       minWidth: 90,
                       textTransform: "none",
@@ -145,7 +141,7 @@ const IncomingRequests = ({ userInfo }) => {
                     color="error"
                     size="small"
                     startIcon={<CloseIcon />}
-                    onClick={() => handleAction(req._id, "reject")}
+                    onClick={() => handleAction(req?._id, "reject")}
                     sx={{
                       minWidth: 90,
                       textTransform: "none",

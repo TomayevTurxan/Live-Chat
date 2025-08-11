@@ -1,7 +1,6 @@
 import { alpha, createTheme } from "@mui/material";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
-import { brand } from "../colors";
-
+''
 // Used only to create transitions
 const muiTheme = createTheme();
 
@@ -66,18 +65,9 @@ export const createComponents = () => {
     },
     MuiButton: {
       styleOverrides: {
-        // root: {
-        // borderRadius: "8px",
-        // textTransform: "none",
-        // },
-        root: ({ theme }) => ({
+        root: () => ({
           borderRadius: "8px",
           textTransform: "none",
-          // backgroundColor: theme.palette.primary.main,
-          // "&:hover": {
-          //   backgroundColor: theme.palette.primary.light,
-          //   color: theme.palette.primary.main,
-          // },
         }),
         sizeSmall: {
           padding: "6px 16px",

@@ -1,6 +1,6 @@
 import { Box, LinearProgress } from "@mui/material";
 import { useRef, useEffect } from "react";
-import MessageBubble from "./MessageBubble";
+import MessageBubble from "./Message";
 import { useGetMessages } from "../../features/queries";
 
 const MessagesList = ({ userInfo, currentChat, onEditMessage }) => {

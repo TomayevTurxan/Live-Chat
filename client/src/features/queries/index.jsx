@@ -60,8 +60,11 @@ export function useUserChats(userId) {
     queryKey: keys.getUserChats(userId),
     queryFn: () => getUserChatsApi(userId),
     enabled: !!userId,
+    refetchInterval: 5000, 
     refetchIntervalInBackground: true, 
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: true, 
+    refetchOnMount: true,
+    staleTime: 0, 
   });
 }
 

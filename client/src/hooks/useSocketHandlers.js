@@ -35,6 +35,9 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
           msg.chatId === chatId ? { ...msg, isRead: true } : msg
         )
       );
+      queryClient.invalidateQueries({
+        queryKey: keys.getWithLastMessage(userInfo._id),
+      });
     };
     const handleDeleteMessage = ({ messageId, chatId }) => {
       if (currentChat?._id !== chatId) return;
@@ -79,7 +82,7 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
       socket.off("messageDeleted", handleDeleteMessage);
       socket.off("messageEdited", handleMessageEdited);
     };
-  }, [userInfo, socket, queryClient,currentChat,userInfo]);
+  }, [socket, queryClient, currentChat, userInfo]);
 
   useEffect(() => {
     if (!socket || !currentChat || !userInfo) return;
