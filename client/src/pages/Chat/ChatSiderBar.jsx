@@ -32,6 +32,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import IncomingRequests from "./IncomingRequests";
 import { useIncomingChatRequests, useUserChats } from "../../features/queries";
+import ChatDataContext from "../../context/ChatContext";
 
 const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
   const queryClient = useQueryClient();
@@ -40,6 +41,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
   const { socket } = useContext(UserContext);
   const [showPotentialChats, setShowPotentialChats] = useState(false);
   const [showIncomingRequests, setShowIncomingRequests] = useState(false);
+  const { setNotifications } = useContext(ChatDataContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
   const {
@@ -82,6 +84,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
     }
     queryClient.clear();
     setCurrentChat(null);
+    setNotifications(null);
     logout();
     navigate("/login");
   };
