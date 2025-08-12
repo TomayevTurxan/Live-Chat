@@ -41,6 +41,10 @@ const PotentialChats = () => {
         onSuccess: () => {
           queryClient.invalidateQueries(["potentialChatsUser"]);
           queryClient.invalidateQueries(["chatRequests"]);
+          queryClient.invalidateQueries([
+            "incomingChatRequests",
+            userInfo?._id,
+          ]);
         },
         onError: (error) => {
           console.error("Error sending chat request:", error);

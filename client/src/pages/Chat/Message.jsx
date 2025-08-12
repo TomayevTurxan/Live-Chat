@@ -20,12 +20,7 @@ import { useContext, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import UserContext from "../../context/UserInfo";
 
-const MessageBubble = ({
-  message,
-  isMyMessage,
-  formatTime,
-  onEditMessage,
-}) => {
+const Message = ({ message, isMyMessage, formatTime, onEditMessage }) => {
   const queryClient = useQueryClient();
   const [isHovered, setIsHovered] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState(null);
@@ -213,6 +208,9 @@ const MessageBubble = ({
           <MenuItem
             key={index}
             onClick={() => {
+              if (item?.action) {
+                item.action();
+              }
               if (!item?.isDelete) {
                 handleMenuClose();
               }
@@ -253,4 +251,4 @@ const MessageBubble = ({
   );
 };
 
-export default MessageBubble;
+export default Message;

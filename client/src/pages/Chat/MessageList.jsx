@@ -1,7 +1,7 @@
 import { Box, LinearProgress } from "@mui/material";
 import { useRef, useEffect } from "react";
-import MessageBubble from "./Message";
 import { useGetMessages } from "../../features/queries";
+import Message from "./Message";
 
 const MessagesList = ({ userInfo, currentChat, onEditMessage }) => {
   const scroll = useRef();
@@ -40,7 +40,7 @@ const MessagesList = ({ userInfo, currentChat, onEditMessage }) => {
       }}
     >
       {messages?.map((msg) => (
-        <MessageBubble
+        <Message
           key={msg._id}
           message={msg}
           isMyMessage={isMyMessage(msg)}
