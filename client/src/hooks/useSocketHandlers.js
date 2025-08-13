@@ -6,12 +6,10 @@ import messageSound from "../../public/mixkit-message-pop-alert-2354.mp3";
 
 const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
   const queryClient = useQueryClient();
-  
-  // Audio obyektlərini useRef ilə saxlayırıq
+
   const messageAudioRef = useRef(null);
   const notificationAudioRef = useRef(null);
 
-  // Audio obyektlərini bir dəfə yaradırıq
   useEffect(() => {
     if (!messageAudioRef.current) {
       messageAudioRef.current = new Audio(messageSound);
@@ -121,6 +119,11 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
       }
     };
 
+    const handleChatUpdated = () => {
+      queryClient.invalidateQueries(keys.getUserChats(userInfo._id));
+    };
+
+    socket.on("chatUpdated", handleChatUpdated);
     socket.on("getMessage", handleGetMessage);
     socket.on("getNotification", handleGetNotification);
     socket.on("getMessagesRead", handleGetMessagesRead);
@@ -128,6 +131,7 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
     socket.on("messageEdited", handleMessageEdited);
 
     return () => {
+      socket.on("chatUpdated", handleChatUpdated);
       socket.off("getMessage", handleGetMessage);
       socket.off("getNotification", handleGetNotification);
       socket.off("getMessagesRead", handleGetMessagesRead);
@@ -144,8 +148,6 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
       userId: userInfo._id,
     });
   }, [currentChat?._id, socket, userInfo]);
-
-
 };
 
 export default useSocketHandlers;

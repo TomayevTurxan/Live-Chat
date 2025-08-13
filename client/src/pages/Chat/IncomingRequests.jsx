@@ -15,19 +15,19 @@ import {
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonIcon from "@mui/icons-material/Person";
-import { useIncomingChatRequests, useUserChats } from "../../features/queries";
+import { useIncomingChatRequests} from "../../features/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useAcceptChatRequest,
   useRejectChatRequest,
 } from "../../features/mutations";
+import UserContext from "../../context/UserInfo";
 
 const IncomingRequests = ({ userInfo }) => {
   const queryClient = useQueryClient();
   const { data, isLoading } = useIncomingChatRequests(userInfo?._id);
   const [loadingId, setLoadingId] = useState(null);
   const [actionType, setActionType] = useState(null);
-  const { refetch: refetchUserChats } = useUserChats(userInfo?._id);
   const acceptMutation = useAcceptChatRequest();
   const rejectMutation = useRejectChatRequest();
 
@@ -39,9 +39,6 @@ const IncomingRequests = ({ userInfo }) => {
 
     mutation.mutate(requestId, {
       onSuccess: () => {
-        if (action === "accept") {
-          refetchUserChats();
-        }
         queryClient.invalidateQueries(["incomingChatRequests"]);
       },
       onSettled: () => {
