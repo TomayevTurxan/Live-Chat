@@ -76,12 +76,15 @@ io.on("connection", (socket) => {
         const user = onlineUsers.find((u) => u.userId === memberId.toString());
         if (user) {
           io.to(user.socketId).emit("getMessage", savedMessage);
-          io.to(user.socketId).emit("getNotification", {
-            senderId: message.senderId,
-            chatId: message.chatId,
-            isRead: false,
-            date: new Date(),
-          });
+
+          if (memberId.toString() !== message.senderId) {
+            io.to(user.socketId).emit("getNotification", {
+              senderId: message.senderId,
+              chatId: message.chatId,
+              isRead: false,
+              date: new Date(),
+            });
+          }
         }
       });
     } catch (error) {

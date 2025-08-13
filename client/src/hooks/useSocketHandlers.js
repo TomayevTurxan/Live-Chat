@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { keys } from "../features/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import notificationSound from "../../public/mixkit-correct-answer-tone-2870.wav";
@@ -6,15 +6,54 @@ import messageSound from "../../public/mixkit-message-pop-alert-2354.mp3";
 
 const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
   const queryClient = useQueryClient();
-  const messageAudio = new Audio(messageSound);
-  const notificationAudio = new Audio(notificationSound);
+
+  const messageAudioRef = useRef(null);
+  const notificationAudioRef = useRef(null);
+
+  useEffect(() => {
+    if (!messageAudioRef.current) {
+      messageAudioRef.current = new Audio(messageSound);
+      messageAudioRef.current.preload = "auto";
+    }
+    if (!notificationAudioRef.current) {
+      notificationAudioRef.current = new Audio(notificationSound);
+      notificationAudioRef.current.preload = "auto";
+    }
+
+    return () => {
+      if (messageAudioRef.current) {
+        messageAudioRef.current.pause();
+        messageAudioRef.current.currentTime = 0;
+      }
+      if (notificationAudioRef.current) {
+        notificationAudioRef.current.pause();
+        notificationAudioRef.current.currentTime = 0;
+      }
+    };
+  }, []);
+
+  const playAudio = useCallback((audioRef) => {
+    if (audioRef.current) {
+      try {
+        audioRef.current.currentTime = 0;
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((error) => {
+            console.error("Audio oynatma xətası:", error);
+          });
+        }
+      } catch (error) {
+        console.error("Audio oynatma xətası:", error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!socket) return;
 
     const handleGetMessage = (res) => {
-      const queryKey = keys.getMessages(res.chatId);
 
+      const queryKey = keys.getMessages(res.chatId);
       const prevMessages = queryClient.getQueryData(queryKey);
 
       if (prevMessages) {
@@ -27,17 +66,35 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
         queryKey: keys.getWithLastMessage(userInfo._id),
       });
 
-      // Auto mark as read if user is currently in this chat
-      if (currentChat?._id === res.chatId) {
+
+      if (currentChat?._id === res.chatId && res.senderId !== userInfo._id) {
         socket.emit("markAsRead", {
           chatId: res.chatId,
           userId: userInfo._id,
         });
+
+        playAudio(messageAudioRef);
+      }
+    };
+
+    const handleGetNotification = (res) => {
+      console.log("getNotification alındı:", res);
+      console.log("currentChat?._id:", currentChat?._id);
+      console.log("notification chatId:", res.chatId);
+
+      if (currentChat?._id !== res.chatId) {
+        playAudio(notificationAudioRef);
+        setNotifications((prev) => [res, ...prev]);
+        console.log("Notification əlavə olundu");
+      } else {
+        console.log("Hazırda həmin chat-dayam, notification göstərilmədi");
       }
     };
 
     const handleGetMessagesRead = ({ chatId }) => {
+      console.log("getMessagesRead alındı:", chatId);
       if (currentChat?._id !== chatId) return;
+
       queryClient.setQueryData(keys.getMessages(chatId), (old = []) =>
         old.map((msg) =>
           msg.chatId === chatId ? { ...msg, isRead: true } : msg
@@ -71,15 +128,6 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
       });
     };
 
-    const handleGetNotification = (res) => {
-      if (currentChat?._id === res.chatId) {
-        messageAudio.play();
-      } else {
-        notificationAudio.play();
-        setNotifications((prev) => [res, ...prev]);
-      }
-    };
-
     socket.on("getMessage", handleGetMessage);
     socket.on("getNotification", handleGetNotification);
     socket.on("getMessagesRead", handleGetMessagesRead);
@@ -93,10 +141,15 @@ const useSocketHandlers = (socket, currentChat, userInfo, setNotifications) => {
       socket.off("messageDeleted", handleDeleteMessage);
       socket.off("messageEdited", handleMessageEdited);
     };
-  }, [socket, queryClient, currentChat, userInfo, setNotifications, messageAudio, notificationAudio]);
+  }, [socket, queryClient, currentChat, userInfo, setNotifications, playAudio]);
 
   useEffect(() => {
     if (!socket || !currentChat || !userInfo) return;
+
+    console.log("Chat dəyişdi, markAsRead göndərilir:", {
+      chatId: currentChat._id,
+      userId: userInfo._id,
+    });
 
     socket.emit("markAsRead", {
       chatId: currentChat._id,
