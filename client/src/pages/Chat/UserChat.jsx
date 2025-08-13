@@ -6,8 +6,11 @@ import UserContext from "../../context/UserInfo";
 import { useChatData } from "../../context/contexts";
 
 const UserChat = ({ chat, user }) => {
-  const recipientId = chat?.members?.find((member) => member._id !== user?._id);
-  const { data: recipientUser } = useRecipientUser(recipientId?._id);
+  const recipient = chat?.members?.find((member) => member._id !== user?._id);
+  const recipientId = recipient?._id || recipient;
+  const { data: recipientUser } = useRecipientUser(recipientId, {
+    enabled: recipientId,
+  });
   const { onlineUsers } = useContext(UserContext);
   const { notifications } = useChatData();
   const { data: withLastMessages } = useWithLastMessages(user?._id);
@@ -23,7 +26,7 @@ const UserChat = ({ chat, user }) => {
   const unreadCount = notifications?.filter(
     (n) => n?.senderId === recipientUser?._id && !n?.isRead
   ).length;
-  
+
   if (!recipientUser) return null;
 
   return (
