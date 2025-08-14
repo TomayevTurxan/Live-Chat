@@ -38,7 +38,7 @@ mongoose
 //socket
 const io = new Server(expressServer, {
   cors: {
-    origin: ["*"],
+    origin: process.env.FRONT_URL,
     methods: ["GET", "POST"],
     credentials: true,
     allowEIO3: true,
