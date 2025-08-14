@@ -155,7 +155,6 @@ const getPotentialChatsUser = async (req, res) => {
       .find({ _id: { $nin: Array.from(excludedIds) } })
       .select("name email createdAt updatedAt");
 
-    // ✅ Chat request status əlavə et
     const pendingRequests = await chatRequestModel.find({
       $or: [{ sender: currentUserId }, { receiver: currentUserId }],
     });
@@ -168,14 +167,14 @@ const getPotentialChatsUser = async (req, res) => {
           ? req.receiver.toString()
           : req.sender.toString();
 
-      pendingMap.set(otherUserId, req.status); // e.g., "pending"
+      pendingMap.set(otherUserId, req.status); 
     });
 
     const enrichedUsers = potentialUsers.map((user) => {
       const status = pendingMap.get(user._id.toString()) || null;
       return {
         ...user.toObject(),
-        requestStatus: status, // "pending" or null
+        requestStatus: status,
       };
     });
 
@@ -253,7 +252,6 @@ const unblockUser = async (req, res) => {
   }
 };
 
-// Get blocked users for a specific user
 const getBlockedUsers = async (req, res) => {
   const userId = req.params.userId;
 
