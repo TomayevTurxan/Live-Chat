@@ -2,7 +2,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_BASE_URL,
+  baseURL: "https://live-chat-back-end.onrender.com/api",
   headers: {
     "Content-Type": "application/json",
   },

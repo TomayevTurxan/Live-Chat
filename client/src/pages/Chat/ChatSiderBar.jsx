@@ -83,7 +83,7 @@ const ChatSidebar = ({ onChatSelect, selectedChat, setCurrentChat }) => {
       socket.disconnect();
     }
     queryClient.clear();
-    setCurrentChat([]);
+    setCurrentChat(null);
     setNotifications([]);
     logout();
     navigate("/login");

@@ -28,7 +28,7 @@ const Chat = () => {
   const handleBackToChats = () => {
     if (isMobile) {
       setShowChatView(false);
-      setCurrentChat([]);
+      setCurrentChat(null);
       setSelectedChat(null);
     }
   };
@@ -75,6 +75,7 @@ const Chat = () => {
         <ChatSidebar
           onChatSelect={handleChatSelect}
           selectedChat={selectedChat}
+          setCurrentChat={setCurrentChat}
         />
       ) : (
         !showUserDetail && (

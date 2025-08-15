@@ -27,7 +27,7 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     if (!userInfo) return;
 
-    const newSocket = io(import.meta.env.VITE_SOCKET_PORT, {
+    const newSocket = io("https://live-chat-back-end.onrender.com", {
       transports: ["websocket", "polling"],
       upgrade: true,
       rememberUpgrade: true,
